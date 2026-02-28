@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alterations Ticket Tool</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <h1>J. Mueser Alterations Ticket</h1>
+      </header>
+
+      <section class="panel">
+        <div class="field-grid">
+          <div>
+            <label for="customerName">Customer Name</label>
+            <input id="customerName" name="customerName" type="text" placeholder="Customer name" />
+          </div>
+
+          <div>
+            <label for="tailor">Tailor</label>
+            <select id="tailor" name="tailor">
+              <option value="Luis" selected>Luis</option>
+              <option value="Jesus">Jesus</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="salesperson">Salesperson Name</label>
+            <select id="salesperson" name="salesperson">
+              <option value="" selected>Select</option>
+              <option value="Jake">Jake</option>
+              <option value="Jonas">Jonas</option>
+              <option value="Chris C">Chris C</option>
+              <option value="Chris B">Chris B</option>
+              <option value="Ryder">Ryder</option>
+              <option value="Chase">Chase</option>
+              <option value="Idris">Idris</option>
+              <option value="Bodhe">Bodhe</option>
+              <option value="Colin">Colin</option>
+              <option value="Jeff">Jeff</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="dueDate">Due Date</label>
+            <input id="dueDate" name="dueDate" type="date" />
+          </div>
+        </div>
+
+        <div class="choice-row">
+          <fieldset class="inline-choices">
+            <legend>Balance Due?</legend>
+            <label>
+              <input type="radio" name="balanceDue" value="Yes" />
+              Yes
+            </label>
+            <label>
+              <input type="radio" name="balanceDue" value="No" />
+              No
+            </label>
+          </fieldset>
+        </div>
+
+        <section class="alterations-section">
+          <h3>Alterations</h3>
+
+          <div class="garment-tabs" role="tablist" aria-label="Alteration garment type">
+            <button id="tab-jacket" class="garment-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="panel-jacket" data-tab="jacket">Jacket</button>
+            <button id="tab-trousers" class="garment-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-trousers" data-tab="trousers">Trouser</button>
+            <button id="tab-shirts" class="garment-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-shirts" data-tab="shirts">Shirt</button>
+          </div>
+
+          <section id="panel-jacket" class="garment-panel is-active" role="tabpanel" aria-labelledby="tab-jacket" data-tab-panel="jacket">
+            <div class="measurement-row single-text-row size-row">
+              <label for="jacketSize">Jacket Size</label>
+              <select id="jacketSize" name="jacketSize">
+                <option value="" selected>Select</option>
+                <option value="custom">Custom</option>
+                <option value="36">36</option>
+                <option value="38">38</option>
+                <option value="40">40</option>
+                <option value="42">42</option>
+                <option value="44">44</option>
+                <option value="46">46</option>
+                <option value="48">48</option>
+              </select>
+            </div>
+
+            <div class="measurements">
+              <h4>Measurements (cm)</h4>
+
+              <div class="measurement-row" data-measurement="halfBack">
+                <label for="halfBackPlus">1/2 Back</label>
+                <div class="measurement-inputs">
+                  <input id="halfBackPlus" name="halfBackPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="halfBackMinus" name="halfBackMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="halfWaist">
+                <label for="halfWaistPlus">1/2 Waist</label>
+                <div class="measurement-inputs">
+                  <input id="halfWaistPlus" name="halfWaistPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="halfWaistMinus" name="halfWaistMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="length">
+                <label for="lengthPlus">Length</label>
+                <div class="measurement-inputs">
+                  <input id="lengthPlus" name="lengthPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="lengthMinus" name="lengthMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="leftSleeve">
+                <label for="leftSleevePlus">Left Sleeve</label>
+                <div class="measurement-inputs">
+                  <input id="leftSleevePlus" name="leftSleevePlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="leftSleeveMinus" name="leftSleeveMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="rightSleeve">
+                <label for="rightSleevePlus">Right Sleeve</label>
+                <div class="measurement-inputs">
+                  <input id="rightSleevePlus" name="rightSleevePlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="rightSleeveMinus" name="rightSleeveMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="bicep">
+                <label for="bicepPlus">Bicep</label>
+                <div class="measurement-inputs">
+                  <input id="bicepPlus" name="bicepPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="bicepMinus" name="bicepMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="lowerCollar">
+                <label for="lowerCollarPlus">Lower Collar</label>
+                <div class="measurement-inputs">
+                  <input id="lowerCollarPlus" name="lowerCollarPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="lowerCollarMinus" name="lowerCollarMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="tightenCollar">
+                <label for="tightenCollarPlus">Tighten Collar</label>
+                <div class="measurement-inputs">
+                  <input id="tightenCollarPlus" name="tightenCollarPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="tightenCollarMinus" name="tightenCollarMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-trousers" class="garment-panel" role="tabpanel" aria-labelledby="tab-trousers" data-tab-panel="trousers" hidden>
+            <div class="measurement-row single-text-row size-row">
+              <label for="trouserSize">Trouser Size</label>
+              <select id="trouserSize" name="trouserSize">
+                <option value="" selected>Select</option>
+                <option value="custom">Custom</option>
+                <option value="28">28</option>
+                <option value="30">30</option>
+                <option value="32">32</option>
+                <option value="34">34</option>
+                <option value="36">36</option>
+                <option value="38">38</option>
+              </select>
+            </div>
+
+            <div class="measurements">
+              <h4>Measurements (cm)</h4>
+
+              <div class="measurement-row" data-measurement="trouserWaist">
+                <label for="trouserWaistPlus">Waist</label>
+                <div class="measurement-inputs">
+                  <input id="trouserWaistPlus" name="trouserWaistPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserWaistMinus" name="trouserWaistMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="trouserSeat">
+                <label for="trouserSeatPlus">Seat</label>
+                <div class="measurement-inputs">
+                  <input id="trouserSeatPlus" name="trouserSeatPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserSeatMinus" name="trouserSeatMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="trouserThighCrotch">
+                <label for="trouserThighCrotchPlus">Thigh/Crotch</label>
+                <div class="measurement-inputs">
+                  <input id="trouserThighCrotchPlus" name="trouserThighCrotchPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserThighCrotchMinus" name="trouserThighCrotchMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="trouserKnee">
+                <label for="trouserKneePlus">Knee</label>
+                <div class="measurement-inputs">
+                  <input id="trouserKneePlus" name="trouserKneePlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserKneeMinus" name="trouserKneeMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="trouserCuffWidth">
+                <label for="trouserCuffWidthPlus">Cuff Width</label>
+                <div class="measurement-inputs">
+                  <input id="trouserCuffWidthPlus" name="trouserCuffWidthPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserCuffWidthMinus" name="trouserCuffWidthMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="trouserRise">
+                <label for="trouserRisePlus">Rise</label>
+                <div class="measurement-inputs">
+                  <input id="trouserRisePlus" name="trouserRisePlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserRiseMinus" name="trouserRiseMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="trouserInseam">
+                <label for="trouserInseamPlus">Inseam</label>
+                <div class="measurement-inputs">
+                  <input id="trouserInseamPlus" name="trouserInseamPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="trouserInseamMinus" name="trouserInseamMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-shirts" class="garment-panel" role="tabpanel" aria-labelledby="tab-shirts" data-tab-panel="shirts" hidden>
+            <div class="measurement-row single-text-row size-row">
+              <label for="shirtSize">Shirt Size</label>
+              <select id="shirtSize" name="shirtSize">
+                <option value="" selected>Select</option>
+                <option value="custom">Custom</option>
+                <option value="15">15</option>
+                <option value="15.5">15.5</option>
+                <option value="15.75">15.75</option>
+                <option value="16">16</option>
+                <option value="16.5">16.5</option>
+                <option value="17">17</option>
+                <option value="17.5">17.5</option>
+              </select>
+            </div>
+
+            <div class="measurements">
+              <h4>Measurements (cm)</h4>
+
+              <div class="measurement-row" data-measurement="shirtBodyLength">
+                <label for="shirtBodyLengthPlus">Body Length</label>
+                <div class="measurement-inputs">
+                  <input id="shirtBodyLengthPlus" name="shirtBodyLengthPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="shirtBodyLengthMinus" name="shirtBodyLengthMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="shirtBody">
+                <label for="shirtBodyPlus">Body</label>
+                <div class="measurement-inputs">
+                  <input id="shirtBodyPlus" name="shirtBodyPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="shirtBodyMinus" name="shirtBodyMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="shirtLeftSleeve">
+                <label for="shirtLeftSleevePlus">Left Sleeve</label>
+                <div class="measurement-inputs">
+                  <input id="shirtLeftSleevePlus" name="shirtLeftSleevePlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="shirtLeftSleeveMinus" name="shirtLeftSleeveMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="shirtRightSleeve">
+                <label for="shirtRightSleevePlus">Right Sleeve</label>
+                <div class="measurement-inputs">
+                  <input id="shirtRightSleevePlus" name="shirtRightSleevePlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="shirtRightSleeveMinus" name="shirtRightSleeveMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+
+              <div class="measurement-row" data-measurement="shirtBicep">
+                <label for="shirtBicepPlus">Bicep</label>
+                <div class="measurement-inputs">
+                  <input id="shirtBicepPlus" name="shirtBicepPlus" type="text" inputmode="decimal" placeholder="+"/>
+                  <input id="shirtBicepMinus" name="shirtBicepMinus" type="text" inputmode="decimal" placeholder="-"/>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" placeholder="Additional notes..." rows="3"></textarea>
+
+        <div class="actions">
+          <button id="printBtn" type="button">Print</button>
+          <span id="saveStatus" aria-live="polite">Not saved yet</span>
+          <button id="clearBtn" class="danger-btn" type="button">Clear All</button>
+        </div>
+      </section>
+
+      <section class="panel output-panel">
+        <article id="printArea" class="output" aria-label="Formatted alterations ticket"></article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
