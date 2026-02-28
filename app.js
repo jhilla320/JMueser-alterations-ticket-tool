@@ -11,6 +11,7 @@ const notesInput = document.getElementById("notes");
 
 const printArea = document.getElementById("printArea");
 const saveStatus = document.getElementById("saveStatus");
+const saveBtn = document.getElementById("saveBtn");
 const printBtn = document.getElementById("printBtn");
 const clearBtn = document.getElementById("clearBtn");
 const garmentTabs = Array.from(document.querySelectorAll(".garment-tab"));
@@ -354,8 +355,8 @@ function renderOutput() {
   `;
 }
 
-function saveToStorage() {
-  const state = {
+function buildState(savedAt = new Date().toISOString()) {
+  return {
     customerName: customerNameInput.value,
     tailor: tailorInput.value,
     salesperson: salespersonInput.value,
@@ -369,12 +370,86 @@ function saveToStorage() {
     shirtMeasurements: getShirtMeasurementState(),
     activeTab: getActiveTab(),
     notes: notesInput.value,
-    savedAt: new Date().toISOString(),
+    savedAt,
   };
+}
+
+function saveToStorage() {
+  const state = buildState();
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   const stamp = new Date(state.savedAt).toLocaleTimeString();
   saveStatus.textContent = `Autosaved at ${stamp}`;
+}
+
+function saveToLocalFile() {
+  const state = buildState();
+  const safeName = (state.customerName || "ticket")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
+  const filename = `${safeName || "ticket"}-${datePart}.doc`;
+
+  // Ensure saved output matches the latest rendered ticket.
+  renderOutput();
+
+  const content = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alterations Ticket</title>
+    <style>
+      @page { size: 4in 6in; margin: 0.1in; }
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+        color: #1e1d1a;
+      }
+      .output {
+        width: 3.8in;
+        min-height: 5.8in;
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        font-size: 10pt;
+        line-height: 1.25;
+      }
+      .output p { margin: 0.03in 0; }
+      .output .doc-title { font-size: 12pt; margin: 0 0 0.06in; color: #3d352c; }
+      .output .meta { font-size: 8.5pt; margin: 0 0 0.08in; color: #6c645d; }
+      .output .garment-output-block,
+      .output .notes-output-block {
+        margin-top: 0.08in;
+        padding-top: 0.06in;
+        border-top: 1px solid #c8c0b4;
+        break-inside: avoid;
+      }
+    </style>
+  </head>
+  <body>
+    <article class="output">
+      ${printArea.innerHTML}
+    </article>
+  </body>
+</html>`;
+
+  const blob = new Blob([content], { type: "application/msword;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  saveToStorage();
+  saveStatus.textContent = `Saved file: ${filename}`;
 }
 
 function loadFromStorage() {
@@ -546,6 +621,8 @@ printBtn.addEventListener("click", () => {
   saveToStorage();
   window.print();
 });
+
+saveBtn.addEventListener("click", saveToLocalFile);
 
 clearBtn.addEventListener("click", clearAllFields);
 

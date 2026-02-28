@@ -260,12 +260,22 @@ button:hover {
   margin: 0;
 }
 
+.preview-tag {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #6f665d;
+  text-transform: uppercase;
+}
+
 .output {
   margin-top: 0.8rem;
   border: 1px dashed #c5b6a3;
   border-radius: 10px;
-  padding: 1rem;
-  min-height: 180px;
+  width: min(100%, 4in);
+  min-height: 6in;
+  padding: 0.22in;
   background: #fffdfa;
   line-height: 1.55;
 }
@@ -311,6 +321,11 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
+  .output {
+    min-height: 180px;
+    padding: 1rem;
+  }
+
   .measurement-row {
     grid-template-columns: 1fr;
     gap: 0.35rem;
@@ -318,8 +333,14 @@ button:hover {
 }
 
 @media print {
+  @page {
+    size: 4in 6in;
+    margin: 0.1in;
+  }
+
   body {
     background: white;
+    margin: 0;
   }
 
   .hero,
@@ -327,14 +348,56 @@ button:hover {
     display: none;
   }
 
+  .preview-tag {
+    display: none;
+  }
+
+  .app {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+
   .output-panel {
     border: none;
     box-shadow: none;
     padding: 0;
+    background: white;
   }
 
   .output {
+    width: 3.8in;
+    min-height: 5.8in;
+    max-width: none;
+    margin: 0;
     border: none;
+    border-radius: 0;
     padding: 0;
+    background: white;
+    font-size: 10pt;
+    line-height: 1.25;
+  }
+
+  .output .doc-title {
+    font-size: 12pt;
+    margin: 0 0 0.06in;
+  }
+
+  .output .meta {
+    font-size: 8.5pt;
+    margin: 0 0 0.08in;
+  }
+
+  .output p {
+    margin: 0.03in 0;
+  }
+
+  .output .garment-output-block,
+  .output .notes-output-block {
+    margin-top: 0.08in;
+    padding-top: 0.06in;
+    border-top: 1px solid #c8c0b4;
+    break-inside: avoid;
   }
 }
