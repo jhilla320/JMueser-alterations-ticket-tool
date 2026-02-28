@@ -622,7 +622,15 @@ printBtn.addEventListener("click", () => {
   window.print();
 });
 
-saveBtn.addEventListener("click", saveToLocalFile);
+saveBtn.addEventListener("click", () => {
+  const missing = validateBeforePrint();
+  if (missing.length) {
+    alert(`Please complete these required fields before saving:\n- ${missing.join("\n- ")}`);
+    return;
+  }
+
+  saveToLocalFile();
+});
 
 clearBtn.addEventListener("click", clearAllFields);
 
