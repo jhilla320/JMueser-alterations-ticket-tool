@@ -16,10 +16,7 @@ body {
   margin: 0;
   font-family: "Avenir Next", "Trebuchet MS", sans-serif;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 12% 18%, #fbe7cb, transparent 35%),
-    radial-gradient(circle at 88% 88%, #f7d8cb, transparent 30%),
-    var(--bg);
+  background: white;
   min-height: 100vh;
 }
 
@@ -186,6 +183,39 @@ textarea {
   margin: 0 0 0.5rem;
 }
 
+.tailor-other-wrap {
+  margin-top: 0.55rem;
+}
+
+.garment-panel textarea {
+  margin-top: 0.15rem;
+}
+
+.garment-field {
+  margin-bottom: 0.65rem;
+}
+
+.garment-field label {
+  margin: 0 0 0.35rem;
+}
+
+.item-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.repeat-item {
+  border: 1px dashed #d8cdc0;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.repeat-item-title {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+  color: #3f372e;
+}
+
 .measurement-row {
   display: grid;
   grid-template-columns: minmax(130px, 1fr) minmax(180px, 230px);
@@ -218,6 +248,35 @@ textarea {
 
 .size-row {
   margin-bottom: 0.75rem;
+}
+
+.add-item-btn,
+.remove-item-btn {
+  margin-top: 0.4rem;
+  border-radius: 8px;
+  padding: 0.48rem 0.75rem;
+}
+
+.add-item-btn {
+  background: #325f4f;
+}
+
+.add-item-btn:hover {
+  background: #294e41;
+}
+
+.remove-item-btn {
+  background: #6d6660;
+}
+
+.remove-item-btn:hover {
+  background: #59524c;
+}
+
+.multi-item-block {
+  margin-top: 0.8rem;
+  border-top: 1px dashed #d8cdc0;
+  padding-top: 0.8rem;
 }
 
 .actions {
@@ -294,12 +353,6 @@ button:hover {
   margin-top: 0.7rem;
 }
 
-.output .notes-output-block {
-  margin-top: 0.95rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid #ded5c8;
-}
-
 .output .doc-title {
   font-size: 1.2rem;
   margin: 0 0 0.7rem;
@@ -310,6 +363,11 @@ button:hover {
   margin: 0 0 0.9rem;
   color: #6c645d;
   font-size: 0.92rem;
+}
+
+.output .rush-flag {
+  color: #b42318;
+  font-weight: 800;
 }
 
 @media (max-width: 680px) {
@@ -384,17 +442,11 @@ button:hover {
     margin: 0 0 0.06in;
   }
 
-  .output .meta {
-    font-size: 8.5pt;
-    margin: 0 0 0.08in;
-  }
-
   .output p {
     margin: 0.03in 0;
   }
 
-  .output .garment-output-block,
-  .output .notes-output-block {
+  .output .garment-output-block {
     margin-top: 0.08in;
     padding-top: 0.06in;
     border-top: 1px solid #c8c0b4;

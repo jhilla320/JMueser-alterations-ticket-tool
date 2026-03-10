@@ -2,12 +2,19 @@ const STORAGE_KEY = "alterationsTicketStateV1";
 
 const customerNameInput = document.getElementById("customerName");
 const tailorInput = document.getElementById("tailor");
+const tailorOtherInput = document.getElementById("tailorOther");
+const tailorOtherWrap = document.getElementById("tailorOtherWrap");
 const salespersonInput = document.getElementById("salesperson");
 const dueDateInput = document.getElementById("dueDate");
-const jacketSizeInput = document.getElementById("jacketSize");
-const trouserSizeInput = document.getElementById("trouserSize");
-const shirtSizeInput = document.getElementById("shirtSize");
-const notesInput = document.getElementById("notes");
+
+const jacketItemsEl = document.getElementById("jacketItems");
+const addJacketBtn = document.getElementById("addJacketBtn");
+
+const trouserItemsEl = document.getElementById("trouserItems");
+const addTrouserBtn = document.getElementById("addTrouserBtn");
+
+const shirtItemsEl = document.getElementById("shirtItems");
+const addShirtBtn = document.getElementById("addShirtBtn");
 
 const printArea = document.getElementById("printArea");
 const saveStatus = document.getElementById("saveStatus");
@@ -17,8 +24,16 @@ const clearBtn = document.getElementById("clearBtn");
 const garmentTabs = Array.from(document.querySelectorAll(".garment-tab"));
 const garmentPanels = Array.from(document.querySelectorAll(".garment-panel"));
 
+const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
+const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
+const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
+
+let jackets = [];
+let trousers = [];
+let shirts = [];
+
 function escapeHtml(text) {
-  return text
+  return String(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -26,13 +41,20 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
-function getBalanceDueValue() {
-  const selected = document.querySelector('input[name="balanceDue"]:checked');
-  return selected ? selected.value : "";
+function escapeAttr(text) {
+  return escapeHtml(String(text));
+}
+
+function createEmptyItem() {
+  return { size: "", description: "", adjustments: "" };
+}
+
+function hasGarmentData(item) {
+  return Boolean((item?.size || "").trim() || (item?.description || "").trim() || (item?.adjustments || "").trim());
 }
 
 function formatMultiline(text) {
-  const lines = text
+  const lines = String(text)
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
@@ -44,199 +66,21 @@ function formatMultiline(text) {
   return lines.map((line) => `• ${escapeHtml(line)}`).join("<br>");
 }
 
-const measurementFields = [
-  { key: "halfBack", label: "1/2 Back" },
-  { key: "halfWaist", label: "1/2 Waist" },
-  { key: "length", label: "Length" },
-  { key: "leftSleeve", label: "Left Sleeve" },
-  { key: "rightSleeve", label: "Right Sleeve" },
-  { key: "bicep", label: "Bicep" },
-  { key: "lowerCollar", label: "Lower Collar" },
-  { key: "tightenCollar", label: "Tighten Collar" },
-];
-
-const trouserMeasurementFields = [
-  { key: "trouserWaist", label: "Waist" },
-  { key: "trouserSeat", label: "Seat" },
-  { key: "trouserThighCrotch", label: "Thigh/Crotch" },
-  { key: "trouserKnee", label: "Knee" },
-  { key: "trouserCuffWidth", label: "Cuff Width" },
-  { key: "trouserRise", label: "Rise" },
-  { key: "trouserInseam", label: "Inseam" },
-];
-
-const shirtMeasurementFields = [
-  { key: "shirtBodyLength", label: "Body Length" },
-  { key: "shirtBody", label: "Body" },
-  { key: "shirtLeftSleeve", label: "Left Sleeve" },
-  { key: "shirtRightSleeve", label: "Right Sleeve" },
-  { key: "shirtBicep", label: "Bicep" },
-];
-
-function getMeasurementInput(key) {
-  return {
-    plus: document.getElementById(`${key}Plus`),
-    minus: document.getElementById(`${key}Minus`),
-  };
+function getBalanceDueValue() {
+  const selected = document.querySelector('input[name="balanceDue"]:checked');
+  return selected ? selected.value : "";
 }
 
-function getMeasurementState() {
-  return measurementFields.reduce((acc, field) => {
-    const input = getMeasurementInput(field.key);
-    acc[field.key] = {
-      plus: input.plus.value.trim(),
-      minus: input.minus.value.trim(),
-    };
-    return acc;
-  }, {});
+function updateTailorOtherVisibility() {
+  tailorOtherWrap.hidden = tailorInput.value !== "Other";
 }
 
-function formatMeasurementsForOutput() {
-  const items = measurementFields
-    .map((field) => {
-      const input = getMeasurementInput(field.key);
-      const plusValue = input.plus.value.trim();
-      const minusValue = input.minus.value.trim();
-      if (!plusValue && !minusValue) {
-        return null;
-      }
+function getTailorDisplayName() {
+  if (tailorInput.value !== "Other") {
+    return tailorInput.value || "Luis";
+  }
 
-      const parts = [];
-      if (plusValue) {
-        parts.push(`+${escapeHtml(plusValue)}`);
-      }
-      if (minusValue) {
-        parts.push(`-${escapeHtml(minusValue)}`);
-      }
-
-      return `• <strong>${field.label}:</strong> ${parts.join(" / ")}`;
-    })
-    .filter(Boolean);
-
-  return items.length ? items.join("<br>") : "None";
-}
-
-function formatMeasurementStateForOutput(fields, state) {
-  const withCm = (value) => {
-    const normalized = (value || "").trim().replace(/\s*cm$/i, "");
-    return `${escapeHtml(normalized)} cm`;
-  };
-
-  const items = fields
-    .map((field) => {
-      const values = state[field.key] || {};
-      const plusValue = (values.plus || "").trim();
-      const minusValue = (values.minus || "").trim();
-      if (!plusValue && !minusValue) {
-        return null;
-      }
-
-      const parts = [];
-      if (plusValue) {
-        parts.push(`+${withCm(plusValue)}`);
-      }
-      if (minusValue) {
-        parts.push(`-${withCm(minusValue)}`);
-      }
-
-      return `• <strong>${field.label}:</strong> ${parts.join(" / ")}`;
-    })
-    .filter(Boolean);
-
-  return items.length ? items.join("<br>") : "None";
-}
-
-function hasMeasurementState(fields, state) {
-  return fields.some((field) => {
-    const values = state[field.key] || {};
-    return (values.plus || "").trim() || (values.minus || "").trim();
-  });
-}
-
-function getTrouserMeasurementInput(key) {
-  return {
-    plus: document.getElementById(`${key}Plus`),
-    minus: document.getElementById(`${key}Minus`),
-  };
-}
-
-function getTrouserMeasurementState() {
-  return trouserMeasurementFields.reduce((acc, field) => {
-    const input = getTrouserMeasurementInput(field.key);
-    acc[field.key] = {
-      plus: input.plus.value.trim(),
-      minus: input.minus.value.trim(),
-    };
-    return acc;
-  }, {});
-}
-
-function formatTrouserMeasurementsForOutput() {
-  const items = trouserMeasurementFields
-    .map((field) => {
-      const input = getTrouserMeasurementInput(field.key);
-      const plusValue = input.plus.value.trim();
-      const minusValue = input.minus.value.trim();
-      if (!plusValue && !minusValue) {
-        return null;
-      }
-
-      const parts = [];
-      if (plusValue) {
-        parts.push(`+${escapeHtml(plusValue)}`);
-      }
-      if (minusValue) {
-        parts.push(`-${escapeHtml(minusValue)}`);
-      }
-
-      return `• <strong>${field.label}:</strong> ${parts.join(" / ")}`;
-    })
-    .filter(Boolean);
-
-  return items.length ? items.join("<br>") : "None";
-}
-
-function getShirtMeasurementInput(key) {
-  return {
-    plus: document.getElementById(`${key}Plus`),
-    minus: document.getElementById(`${key}Minus`),
-  };
-}
-
-function getShirtMeasurementState() {
-  return shirtMeasurementFields.reduce((acc, field) => {
-    const input = getShirtMeasurementInput(field.key);
-    acc[field.key] = {
-      plus: input.plus.value.trim(),
-      minus: input.minus.value.trim(),
-    };
-    return acc;
-  }, {});
-}
-
-function formatShirtMeasurementsForOutput() {
-  const items = shirtMeasurementFields
-    .map((field) => {
-      const input = getShirtMeasurementInput(field.key);
-      const plusValue = input.plus.value.trim();
-      const minusValue = input.minus.value.trim();
-      if (!plusValue && !minusValue) {
-        return null;
-      }
-
-      const parts = [];
-      if (plusValue) {
-        parts.push(`+${escapeHtml(plusValue)}`);
-      }
-      if (minusValue) {
-        parts.push(`-${escapeHtml(minusValue)}`);
-      }
-
-      return `• <strong>${field.label}:</strong> ${parts.join(" / ")}`;
-    })
-    .filter(Boolean);
-
-  return items.length ? items.join("<br>") : "None";
+  return tailorOtherInput.value.trim() || "Other";
 }
 
 function formatDueDate(dateValue) {
@@ -244,8 +88,7 @@ function formatDueDate(dateValue) {
     return "Not set";
   }
 
-  const date = new Date(`${dateValue}T00:00:00`);
-  return date.toLocaleDateString();
+  return new Date(`${dateValue}T00:00:00`).toLocaleDateString();
 }
 
 function isRushDueDate(dateValue, generatedAt) {
@@ -285,73 +128,186 @@ function setActiveTab(tabName, shouldPersist = true) {
   }
 }
 
-function renderOutput() {
-  const withCm = (value) => {
-    const normalized = (value || "").trim().replace(/\s*cm$/i, "");
-    return `${escapeHtml(normalized)} cm`;
-  };
+function buildOptions(options, selectedValue) {
+  const base = '<option value="">Select</option>';
+  const values = options
+    .map((value) => {
+      const selected = selectedValue === value ? " selected" : "";
+      const label = value === "custom" ? "Custom" : value;
+      return `<option value="${value}"${selected}>${label}</option>`;
+    })
+    .join("");
+  return `${base}${values}`;
+}
 
+function renderItemList(type) {
+  const map = {
+    jacket: { items: jackets, container: jacketItemsEl, label: "Jacket", sizes: JACKET_SIZES },
+    trouser: { items: trousers, container: trouserItemsEl, label: "Trouser", sizes: TROUSER_SIZES },
+    shirt: { items: shirts, container: shirtItemsEl, label: "Shirt", sizes: SHIRT_SIZES },
+  };
+  const config = map[type];
+  if (!config) return;
+
+  const { items, container, label, sizes } = config;
+
+  container.innerHTML = items
+    .map((item, idx) => {
+      const canRemove = items.length > 1;
+      const itemTitle = idx === 0 ? label : `${label} ${idx + 1}`;
+      return `
+        <section class="repeat-item" data-type="${type}" data-index="${idx}">
+          <p class="repeat-item-title">${itemTitle}</p>
+          <div class="garment-field size-row">
+            <label for="${type}-size-${idx}">Size</label>
+            <select id="${type}-size-${idx}" data-type="${type}" data-index="${idx}" data-field="size">
+              ${buildOptions(sizes, item.size)}
+            </select>
+          </div>
+          <div class="garment-field">
+            <label for="${type}-description-${idx}">Description</label>
+            <input
+              id="${type}-description-${idx}"
+              type="text"
+              data-type="${type}"
+              data-index="${idx}"
+              data-field="description"
+              value="${escapeAttr(item.description)}"
+            />
+          </div>
+          <label for="${type}-adjustments-${idx}">Adjustments</label>
+          <textarea
+            id="${type}-adjustments-${idx}"
+            rows="5"
+            data-type="${type}"
+            data-index="${idx}"
+            data-field="adjustments"
+          >${escapeHtml(item.adjustments)}</textarea>
+          ${
+            canRemove
+              ? `<button type="button" class="remove-item-btn" data-action="remove" data-type="${type}" data-index="${idx}">Remove ${label}</button>`
+              : ""
+          }
+        </section>
+      `;
+    })
+    .join("");
+}
+
+function handleDynamicInput(event) {
+  const target = event.target;
+  if (!target || !target.dataset) {
+    return;
+  }
+
+  const { type, field, index } = target.dataset;
+  if (!type || !field || index === undefined) {
+    return;
+  }
+
+  const idx = Number(index);
+  if (Number.isNaN(idx)) {
+    return;
+  }
+
+  const items = type === "jacket" ? jackets : type === "trouser" ? trousers : type === "shirt" ? shirts : null;
+  if (!items || !items[idx]) {
+    return;
+  }
+
+  items[idx][field] = target.value;
+  onInputChange();
+}
+
+function handleDynamicClick(event) {
+  const target = event.target;
+  if (!target || !target.dataset || target.dataset.action !== "remove") {
+    return;
+  }
+
+  const type = target.dataset.type;
+  const idx = Number(target.dataset.index);
+  if (!type || Number.isNaN(idx)) {
+    return;
+  }
+
+  if (type === "jacket") {
+    jackets.splice(idx, 1);
+    if (!jackets.length) jackets.push(createEmptyItem());
+    renderItemList("jacket");
+  } else if (type === "trouser") {
+    trousers.splice(idx, 1);
+    if (!trousers.length) trousers.push(createEmptyItem());
+    renderItemList("trouser");
+  } else if (type === "shirt") {
+    shirts.splice(idx, 1);
+    if (!shirts.length) shirts.push(createEmptyItem());
+    renderItemList("shirt");
+  }
+
+  onInputChange();
+}
+
+function renderOutput() {
   const now = new Date();
   const customerName = customerNameInput.value.trim() || "Not provided";
-  const tailor = tailorInput.value || "Luis";
+  const tailor = getTailorDisplayName();
   const salesperson = salespersonInput.value || "Select";
   const dueDate = formatDueDate(dueDateInput.value);
   const rushFlag = isRushDueDate(dueDateInput.value, now);
   const balanceDue = getBalanceDueValue();
-  const jacketSize = jacketSizeInput.value.trim();
-  const trouserSize = trouserSizeInput.value.trim();
-  const shirtSize = shirtSizeInput.value.trim();
-  const jacketMeasurements = getMeasurementState();
-  const trouserMeasurements = getTrouserMeasurementState();
-  const shirtMeasurements = getShirtMeasurementState();
-  const jacketOutput = formatMeasurementStateForOutput(measurementFields, jacketMeasurements);
-  const trouserOutput = formatMeasurementStateForOutput(trouserMeasurementFields, trouserMeasurements);
-  const shirtOutput = formatMeasurementStateForOutput(shirtMeasurementFields, shirtMeasurements);
-  const hasJacketChanges = Boolean(jacketSize || hasMeasurementState(measurementFields, jacketMeasurements));
-  const hasTrouserChanges = Boolean(
-    trouserSize || hasMeasurementState(trouserMeasurementFields, trouserMeasurements),
-  );
-  const hasShirtChanges = Boolean(shirtSize || hasMeasurementState(shirtMeasurementFields, shirtMeasurements));
+
+  const jacketFilled = jackets.filter(hasGarmentData);
+  const trouserFilled = trousers.filter(hasGarmentData);
+  const shirtFilled = shirts.filter(hasGarmentData);
 
   const garmentSections = [];
-  if (hasJacketChanges) {
-    garmentSections.push(`
-      <section class="garment-output-block">
-        ${jacketSize ? `<p><strong>Jacket Size:</strong> ${escapeHtml(jacketSize)}</p>` : ""}
-        <p><strong>Jacket Measurements:</strong><br>${jacketOutput}</p>
-      </section>
-    `);
+
+  if (jacketFilled.length) {
+    garmentSections.push(
+      ...jacketFilled.map((entry, idx) => `
+        <section class="garment-output-block">
+          ${entry.size ? `<p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>` : ""}
+          ${entry.description ? `<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>` : ""}
+          <p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Adjustments:</strong><br>${formatMultiline(entry.adjustments)}</p>
+        </section>
+      `),
+    );
   }
-  if (hasTrouserChanges) {
-    garmentSections.push(`
-      <section class="garment-output-block">
-        ${trouserSize ? `<p><strong>Trouser Size:</strong> ${escapeHtml(trouserSize)}</p>` : ""}
-        <p><strong>Trouser Measurements:</strong><br>${trouserOutput}</p>
-      </section>
-    `);
+
+  if (trouserFilled.length) {
+    garmentSections.push(
+      ...trouserFilled.map((entry, idx) => `
+        <section class="garment-output-block">
+          ${entry.size ? `<p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>` : ""}
+          ${entry.description ? `<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>` : ""}
+          <p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Adjustments:</strong><br>${formatMultiline(entry.adjustments)}</p>
+        </section>
+      `),
+    );
   }
-  if (hasShirtChanges) {
-    garmentSections.push(`
-      <section class="garment-output-block">
-        ${shirtSize ? `<p><strong>Shirt Size:</strong> ${escapeHtml(shirtSize)}</p>` : ""}
-        <p><strong>Shirt Measurements:</strong><br>${shirtOutput}</p>
-      </section>
-    `);
+
+  if (shirtFilled.length) {
+    garmentSections.push(
+      ...shirtFilled.map((entry, idx) => `
+        <section class="garment-output-block">
+          ${entry.size ? `<p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>` : ""}
+          ${entry.description ? `<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>` : ""}
+          <p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Adjustments:</strong><br>${formatMultiline(entry.adjustments)}</p>
+        </section>
+      `),
+    );
   }
 
   printArea.innerHTML = `
-    <h3 class="doc-title">${escapeHtml(`Alterations Ticket - ${customerName}`)}</h3>
-    <p class="meta">Generated: ${now.toLocaleString()}</p>
+    <h3 class="doc-title">Alterations Ticket</h3>
+    ${rushFlag ? '<p class="rush-flag">**RUSH**</p>' : ""}
     <p><strong>Customer Name:</strong> ${escapeHtml(customerName)}</p>
     <p><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
     <p><strong>Salesperson Name:</strong> ${escapeHtml(salesperson)}</p>
     <p><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
-    ${rushFlag ? "<p><strong>***RUSH***</strong></p>" : ""}
     ${balanceDue ? `<p><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
     ${garmentSections.join("")}
-    <section class="notes-output-block">
-      <p><strong>Notes:</strong><br>${formatMultiline(notesInput.value)}</p>
-    </section>
   `;
 }
 
@@ -359,24 +315,20 @@ function buildState(savedAt = new Date().toISOString()) {
   return {
     customerName: customerNameInput.value,
     tailor: tailorInput.value,
+    tailorOther: tailorOtherInput.value,
     salesperson: salespersonInput.value,
     dueDate: dueDateInput.value,
     balanceDue: getBalanceDueValue(),
-    jacketSize: jacketSizeInput.value,
-    jacketMeasurements: getMeasurementState(),
-    trouserSize: trouserSizeInput.value,
-    trouserMeasurements: getTrouserMeasurementState(),
-    shirtSize: shirtSizeInput.value,
-    shirtMeasurements: getShirtMeasurementState(),
+    jackets,
+    trousers,
+    shirts,
     activeTab: getActiveTab(),
-    notes: notesInput.value,
     savedAt,
   };
 }
 
 function saveToStorage() {
   const state = buildState();
-
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   const stamp = new Date(state.savedAt).toLocaleTimeString();
   saveStatus.textContent = `Autosaved at ${stamp}`;
@@ -392,7 +344,6 @@ function saveToLocalFile() {
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
   const filename = `${safeName || "ticket"}-${datePart}.doc`;
 
-  // Ensure saved output matches the latest rendered ticket.
   renderOutput();
 
   const content = `<!doctype html>
@@ -421,9 +372,8 @@ function saveToLocalFile() {
       }
       .output p { margin: 0.03in 0; }
       .output .doc-title { font-size: 12pt; margin: 0 0 0.06in; color: #3d352c; }
-      .output .meta { font-size: 8.5pt; margin: 0 0 0.08in; color: #6c645d; }
-      .output .garment-output-block,
-      .output .notes-output-block {
+      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.08in; }
+      .output .garment-output-block {
         margin-top: 0.08in;
         padding-top: 0.06in;
         border-top: 1px solid #c8c0b4;
@@ -452,9 +402,24 @@ function saveToLocalFile() {
   saveStatus.textContent = `Saved file: ${filename}`;
 }
 
+function parseLegacyArray(primary, secondary) {
+  const arr = [];
+  if (hasGarmentData(primary)) arr.push(primary);
+  if (hasGarmentData(secondary)) arr.push(secondary);
+  if (!arr.length) arr.push(createEmptyItem());
+  return arr;
+}
+
 function loadFromStorage() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
+    jackets = [createEmptyItem()];
+    trousers = [createEmptyItem()];
+    shirts = [createEmptyItem()];
+    renderItemList("jacket");
+    renderItemList("trouser");
+    renderItemList("shirt");
+    updateTailorOtherVisibility();
     renderOutput();
     return;
   }
@@ -463,11 +428,80 @@ function loadFromStorage() {
     const parsed = JSON.parse(stored);
     customerNameInput.value = parsed.customerName || "";
     tailorInput.value = parsed.tailor || "Luis";
+    tailorOtherInput.value = parsed.tailorOther || "";
     salespersonInput.value = parsed.salesperson || "";
     dueDateInput.value = parsed.dueDate || "";
-    jacketSizeInput.value = parsed.jacketSize || "";
-    trouserSizeInput.value = parsed.trouserSize || "";
-    shirtSizeInput.value = parsed.shirtSize || "";
+
+    if (Array.isArray(parsed.jackets)) {
+      jackets = parsed.jackets.map((item) => ({
+        size: item?.size || "",
+        description: item?.description || "",
+        adjustments: item?.adjustments || "",
+      }));
+      if (!jackets.length) jackets = [createEmptyItem()];
+    } else {
+      jackets = parseLegacyArray(
+        {
+          size: parsed.jacketSize || "",
+          description: parsed.jacketDescription || "",
+          adjustments: parsed.jacketAdjustments || "",
+        },
+        {
+          size: parsed.jacketSize2 || "",
+          description: parsed.jacketDescription2 || "",
+          adjustments: parsed.jacketAdjustments2 || "",
+        },
+      );
+    }
+
+    if (Array.isArray(parsed.trousers)) {
+      trousers = parsed.trousers.map((item) => ({
+        size: item?.size || "",
+        description: item?.description || "",
+        adjustments: item?.adjustments || "",
+      }));
+      if (!trousers.length) trousers = [createEmptyItem()];
+    } else {
+      trousers = parseLegacyArray(
+        {
+          size: parsed.trouserSize || "",
+          description: parsed.trouserDescription || "",
+          adjustments: parsed.trouserAdjustments || "",
+        },
+        {
+          size: parsed.trouserSize2 || "",
+          description: parsed.trouserDescription2 || "",
+          adjustments: parsed.trouserAdjustments2 || "",
+        },
+      );
+    }
+
+    if (Array.isArray(parsed.shirts)) {
+      shirts = parsed.shirts.map((item) => ({
+        size: item?.size || "",
+        description: item?.description || "",
+        adjustments: item?.adjustments || "",
+      }));
+      if (!shirts.length) shirts = [createEmptyItem()];
+    } else {
+      shirts = parseLegacyArray(
+        {
+          size: parsed.shirtSize || "",
+          description: parsed.shirtDescription || "",
+          adjustments: parsed.shirtAdjustments || "",
+        },
+        {
+          size: parsed.shirtSize2 || "",
+          description: parsed.shirtDescription2 || "",
+          adjustments: parsed.shirtAdjustments2 || "",
+        },
+      );
+    }
+
+    renderItemList("jacket");
+    renderItemList("trouser");
+    renderItemList("shirt");
+
     setActiveTab(parsed.activeTab || "jacket", false);
 
     const balanceDue = parsed.balanceDue === "Yes" || parsed.balanceDue === "No" ? parsed.balanceDue : "";
@@ -482,63 +516,20 @@ function loadFromStorage() {
       }
     }
 
-    const jacketMeasurements = parsed.jacketMeasurements || parsed.measurements;
-    if (jacketMeasurements && typeof jacketMeasurements === "object") {
-      measurementFields.forEach((field) => {
-        const input = getMeasurementInput(field.key);
-        const value = jacketMeasurements[field.key] || {};
-
-        // Backward compatibility with older sign/value storage.
-        if ("sign" in value || "value" in value) {
-          if (value.sign === "-") {
-            input.minus.value = value.value || "";
-            input.plus.value = "";
-          } else {
-            input.plus.value = value.value || "";
-            input.minus.value = "";
-          }
-          return;
-        }
-
-        input.plus.value = value.plus || "";
-        input.minus.value = value.minus || "";
-      });
-    }
-
-    const trouserMeasurements = parsed.trouserMeasurements || {};
-    if (parsed.trouserInseam) {
-      trouserMeasurements.trouserInseam = {
-        plus: parsed.trouserInseam,
-        minus: "",
-      };
-    }
-    if (trouserMeasurements && typeof trouserMeasurements === "object") {
-      trouserMeasurementFields.forEach((field) => {
-        const input = getTrouserMeasurementInput(field.key);
-        const value = trouserMeasurements[field.key] || {};
-        input.plus.value = value.plus || "";
-        input.minus.value = value.minus || "";
-      });
-    }
-
-    if (parsed.shirtMeasurements && typeof parsed.shirtMeasurements === "object") {
-      shirtMeasurementFields.forEach((field) => {
-        const input = getShirtMeasurementInput(field.key);
-        const value = parsed.shirtMeasurements[field.key] || {};
-        input.plus.value = value.plus || "";
-        input.minus.value = value.minus || "";
-      });
-    }
-
-    notesInput.value = parsed.notes || "";
-
     if (parsed.savedAt) {
       saveStatus.textContent = `Last saved ${new Date(parsed.savedAt).toLocaleString()}`;
     }
   } catch {
     localStorage.removeItem(STORAGE_KEY);
+    jackets = [createEmptyItem()];
+    trousers = [createEmptyItem()];
+    shirts = [createEmptyItem()];
+    renderItemList("jacket");
+    renderItemList("trouser");
+    renderItemList("shirt");
   }
 
+  updateTailorOtherVisibility();
   renderOutput();
 }
 
@@ -551,20 +542,9 @@ function onInputChange() {
 
 function validateBeforePrint() {
   const missing = [];
-  const customerName = customerNameInput.value.trim();
-  const salesperson = salespersonInput.value.trim();
-  const dueDate = dueDateInput.value.trim();
-
-  if (!customerName) {
-    missing.push("Customer Name");
-  }
-  if (!salesperson) {
-    missing.push("Salesperson Name");
-  }
-  if (!dueDate) {
-    missing.push("Due Date");
-  }
-
+  if (!customerNameInput.value.trim()) missing.push("Customer Name");
+  if (!salespersonInput.value.trim()) missing.push("Salesperson Name");
+  if (!dueDateInput.value.trim()) missing.push("Due Date");
   return missing;
 }
 
@@ -573,6 +553,7 @@ function clearAllFields() {
 
   customerNameInput.value = "";
   tailorInput.value = "Luis";
+  tailorOtherInput.value = "";
   salespersonInput.value = "";
   dueDateInput.value = "";
 
@@ -581,30 +562,15 @@ function clearAllFields() {
     selectedBalance.checked = false;
   }
 
-  jacketSizeInput.value = "";
-  trouserSizeInput.value = "";
-  shirtSizeInput.value = "";
-  notesInput.value = "";
-
-  measurementFields.forEach((field) => {
-    const input = getMeasurementInput(field.key);
-    input.plus.value = "";
-    input.minus.value = "";
-  });
-
-  trouserMeasurementFields.forEach((field) => {
-    const input = getTrouserMeasurementInput(field.key);
-    input.plus.value = "";
-    input.minus.value = "";
-  });
-
-  shirtMeasurementFields.forEach((field) => {
-    const input = getShirtMeasurementInput(field.key);
-    input.plus.value = "";
-    input.minus.value = "";
-  });
+  jackets = [createEmptyItem()];
+  trousers = [createEmptyItem()];
+  shirts = [createEmptyItem()];
+  renderItemList("jacket");
+  renderItemList("trouser");
+  renderItemList("shirt");
 
   setActiveTab("jacket", false);
+  updateTailorOtherVisibility();
   localStorage.removeItem(STORAGE_KEY);
   saveStatus.textContent = "Form cleared";
   renderOutput();
@@ -634,6 +600,39 @@ saveBtn.addEventListener("click", () => {
 
 clearBtn.addEventListener("click", clearAllFields);
 
+addJacketBtn.addEventListener("click", () => {
+  jackets.push(createEmptyItem());
+  renderItemList("jacket");
+  onInputChange();
+});
+
+addTrouserBtn.addEventListener("click", () => {
+  trousers.push(createEmptyItem());
+  renderItemList("trouser");
+  onInputChange();
+});
+
+addShirtBtn.addEventListener("click", () => {
+  shirts.push(createEmptyItem());
+  renderItemList("shirt");
+  onInputChange();
+});
+
+jacketItemsEl.addEventListener("input", handleDynamicInput);
+trouserItemsEl.addEventListener("input", handleDynamicInput);
+jacketItemsEl.addEventListener("change", handleDynamicInput);
+trouserItemsEl.addEventListener("change", handleDynamicInput);
+shirtItemsEl.addEventListener("input", handleDynamicInput);
+shirtItemsEl.addEventListener("change", handleDynamicInput);
+jacketItemsEl.addEventListener("click", handleDynamicClick);
+trouserItemsEl.addEventListener("click", handleDynamicClick);
+shirtItemsEl.addEventListener("click", handleDynamicClick);
+
+tailorInput.addEventListener("change", () => {
+  updateTailorOtherVisibility();
+  onInputChange();
+});
+
 garmentTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     setActiveTab(tab.dataset.tab || "jacket");
@@ -643,25 +642,9 @@ garmentTabs.forEach((tab) => {
 [
   customerNameInput,
   tailorInput,
+  tailorOtherInput,
   salespersonInput,
   dueDateInput,
-  jacketSizeInput,
-  trouserSizeInput,
-  shirtSizeInput,
-  notesInput,
   ...document.querySelectorAll('input[name="balanceDue"]'),
-  ...measurementFields.flatMap((field) => {
-    const input = getMeasurementInput(field.key);
-    return [input.plus, input.minus];
-  }),
-  ...trouserMeasurementFields.flatMap((field) => {
-    const input = getTrouserMeasurementInput(field.key);
-    return [input.plus, input.minus];
-  }),
-  ...shirtMeasurementFields.flatMap((field) => {
-    const input = getShirtMeasurementInput(field.key);
-    return [input.plus, input.minus];
-  }),
 ].forEach((el) => el.addEventListener("input", onInputChange));
-
 loadFromStorage();
