@@ -6,6 +6,8 @@ const tailorOtherInput = document.getElementById("tailorOther");
 const tailorOtherWrap = document.getElementById("tailorOtherWrap");
 const salespersonInput = document.getElementById("salesperson");
 const dueDateInput = document.getElementById("dueDate");
+let dueDateHiddenInput = null;
+let dueDateDisplayInput = null;
 
 const jacketItemsEl = document.getElementById("jacketItems");
 const addJacketBtn = document.getElementById("addJacketBtn");
@@ -390,6 +392,34 @@ function setActiveTab(tabName, shouldPersist = true) {
   }
 }
 
+function isIOSDevice() {
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isIpadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  return isIOS || isIpadOS;
+}
+
+function getDueDateValue() {
+  return dueDateHiddenInput ? dueDateHiddenInput.value : dueDateInput.value;
+}
+
+function setDueDateValue(value) {
+  if (dueDateHiddenInput) {
+    dueDateHiddenInput.value = value || "";
+    updateDueDateDisplay();
+    return;
+  }
+  dueDateInput.value = value || "";
+}
+
+function updateDueDateDisplay() {
+  if (!dueDateDisplayInput) {
+    return;
+  }
+  const value = dueDateHiddenInput ? dueDateHiddenInput.value : "";
+  dueDateDisplayInput.value = value ? new Date(`${value}T00:00:00`).toLocaleDateString() : "";
+}
+
 function buildOptions(options, selectedValue) {
   const base = '<option value="">Select</option>';
   const values = options
@@ -563,8 +593,9 @@ function renderOutput() {
   const customerName = customerNameInput.value.trim() || "Not provided";
   const tailor = getTailorDisplayName();
   const salesperson = salespersonInput.value || "Select";
-  const dueDate = formatDueDate(dueDateInput.value);
-  const rushFlag = isRushDueDate(dueDateInput.value, now);
+  const dueDateValue = getDueDateValue();
+  const dueDate = formatDueDate(dueDateValue);
+  const rushFlag = isRushDueDate(dueDateValue, now);
   const balanceDue = getBalanceDueValue();
 
   const jacketFilled = jackets.filter(hasGarmentData);
@@ -726,7 +757,7 @@ function buildState(savedAt = new Date().toISOString()) {
     tailor: tailorInput.value,
     tailorOther: tailorOtherInput.value,
     salesperson: salespersonInput.value,
-    dueDate: dueDateInput.value,
+    dueDate: getDueDateValue(),
     balanceDue: getBalanceDueValue(),
     jackets,
     trousers,
@@ -839,7 +870,7 @@ function loadFromStorage() {
     tailorInput.value = parsed.tailor || "Luis";
     tailorOtherInput.value = parsed.tailorOther || "";
     salespersonInput.value = parsed.salesperson || "";
-    dueDateInput.value = parsed.dueDate || "";
+    setDueDateValue(parsed.dueDate || "");
 
     if (Array.isArray(parsed.jackets)) {
       jackets = parsed.jackets.map((item) => ({
@@ -981,7 +1012,7 @@ function validateBeforePrint() {
   const missing = [];
   if (!customerNameInput.value.trim()) missing.push("Customer Name");
   if (!salespersonInput.value.trim()) missing.push("Salesperson Name");
-  if (!dueDateInput.value.trim()) missing.push("Due Date");
+  if (!getDueDateValue().trim()) missing.push("Due Date");
   return missing;
 }
 
@@ -992,7 +1023,7 @@ function clearAllFields() {
   tailorInput.value = "Luis";
   tailorOtherInput.value = "";
   salespersonInput.value = "";
-  dueDateInput.value = "";
+  setDueDateValue("");
 
   const selectedBalance = document.querySelector('input[name="balanceDue"]:checked');
   if (selectedBalance) {
@@ -1081,7 +1112,63 @@ garmentTabs.forEach((tab) => {
   tailorInput,
   tailorOtherInput,
   salespersonInput,
-  dueDateInput,
   ...document.querySelectorAll('input[name="balanceDue"]'),
 ].forEach((el) => el.addEventListener("input", onInputChange));
+
+if (!dueDateHiddenInput) {
+  dueDateInput.addEventListener("input", onInputChange);
+}
+
+function setupIOSDateFallback() {
+  if (!isIOSDevice()) {
+    return;
+  }
+
+  const original = dueDateInput;
+  const wrapper = document.createElement("div");
+  wrapper.className = "ios-date-wrapper";
+
+  const display = document.createElement("input");
+  display.type = "text";
+  display.id = "dueDateDisplay";
+  display.placeholder = "MM/DD/YYYY";
+  display.readOnly = true;
+  display.inputMode = "none";
+  display.autocomplete = "off";
+  display.setAttribute("aria-label", "Due Date");
+
+  original.id = "dueDateHidden";
+  original.name = "dueDateHidden";
+  original.style.position = "absolute";
+  original.style.opacity = "0";
+  original.style.pointerEvents = "none";
+  original.style.height = "0";
+  original.style.width = "0";
+  original.style.border = "0";
+  original.style.padding = "0";
+  original.style.margin = "0";
+  original.setAttribute("aria-hidden", "true");
+
+  original.parentNode.insertBefore(wrapper, original);
+  wrapper.appendChild(display);
+  wrapper.appendChild(original);
+
+  dueDateHiddenInput = original;
+  dueDateDisplayInput = display;
+
+  const openPicker = () => {
+    dueDateHiddenInput.focus();
+    dueDateHiddenInput.click();
+  };
+  display.addEventListener("click", openPicker);
+  display.addEventListener("focus", openPicker);
+  dueDateHiddenInput.addEventListener("change", () => {
+    updateDueDateDisplay();
+    onInputChange();
+  });
+
+  updateDueDateDisplay();
+}
+
+setupIOSDateFallback();
 loadFromStorage();
