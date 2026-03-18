@@ -46,11 +46,273 @@ function escapeAttr(text) {
 }
 
 function createEmptyItem() {
-  return { size: "", description: "", adjustments: "" };
+  return {
+    size: "",
+    description: "",
+    adjustments: "",
+    halfBack: 0,
+    halfWaist: 0,
+    shortenBody: 0,
+    sleeves: 0,
+    tightenCollar: 0,
+    buttons: "",
+    trouserWaist: 0,
+    trouserSeat: 0,
+    trouserThigh: 0,
+    trouserKnee: 0,
+    trouserLegOpening: 0,
+    trouserInseam: 0,
+    trouserTotalLength: "",
+    trouserCuff: "",
+    shirtSleeve: 0,
+    shirtBody: 0,
+  };
 }
 
 function hasGarmentData(item) {
-  return Boolean((item?.size || "").trim() || (item?.description || "").trim() || (item?.adjustments || "").trim());
+  const measurementFields = [
+    "halfBack",
+    "halfWaist",
+    "shortenBody",
+    "sleeves",
+    "tightenCollar",
+    "trouserWaist",
+    "trouserSeat",
+    "trouserThigh",
+    "trouserKnee",
+    "trouserLegOpening",
+    "trouserInseam",
+    "shirtSleeve",
+    "shirtBody",
+  ];
+  const hasMeasurements = measurementFields.some((field) => Number(item?.[field]) !== 0);
+  return Boolean(
+    (item?.size || "").trim() ||
+      (item?.description || "").trim() ||
+      (item?.adjustments || "").trim() ||
+      (item?.buttons || "").trim() ||
+      (item?.trouserTotalLength || "").trim() ||
+      (item?.trouserCuff || "").trim() ||
+      hasMeasurements,
+  );
+}
+
+function formatQuarter(value) {
+  const abs = Math.abs(Number(value) || 0);
+  const whole = Math.floor(abs / 4);
+  const remainder = abs % 4;
+  const fraction =
+    remainder === 0 ? "" : remainder === 1 ? "1/4" : remainder === 2 ? "1/2" : "3/4";
+
+  if (whole && fraction) return `${whole} ${fraction}`;
+  if (whole) return `${whole}`;
+  return fraction || "0";
+}
+
+function formatSignedQuarter(value) {
+  const numeric = Number(value) || 0;
+  if (numeric === 0) return "0";
+  const sign = numeric > 0 ? "+" : "-";
+  return `${sign} ${formatQuarter(numeric)}`;
+}
+
+function buildButtonsOptions(selectedValue) {
+  return buildOptions(["1", "2", "3", "4"], selectedValue);
+}
+
+function renderJacketMeasurements(item, idx) {
+  const formatValue = (field) => formatSignedQuarter(item?.[field] || 0);
+  return `
+    <div class="measurement-controls">
+      <div class="measurement-row">
+        <label for="jacket-halfBack-${idx}">1/2 Back</label>
+        <div class="stepper" id="jacket-halfBack-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="halfBack" data-dir="-1">-</button>
+          <input
+            class="stepper-value-input"
+            type="text"
+            inputmode="none"
+            value="${formatValue("halfBack")}"
+            data-action="clear-value"
+            data-type="jacket"
+            data-index="${idx}"
+            data-field="halfBack"
+          />
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="halfBack" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="jacket-halfWaist-${idx}">1/2 Waist</label>
+        <div class="stepper" id="jacket-halfWaist-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="halfWaist" data-dir="-1">-</button>
+          <input
+            class="stepper-value-input"
+            type="text"
+            inputmode="none"
+            value="${formatValue("halfWaist")}"
+            data-action="clear-value"
+            data-type="jacket"
+            data-index="${idx}"
+            data-field="halfWaist"
+          />
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="halfWaist" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="jacket-shortenBody-${idx}">Shorten Body</label>
+        <div class="stepper" id="jacket-shortenBody-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="shortenBody" data-dir="-1">-</button>
+          <input
+            class="stepper-value-input"
+            type="text"
+            inputmode="none"
+            value="${formatValue("shortenBody")}"
+            data-action="clear-value"
+            data-type="jacket"
+            data-index="${idx}"
+            data-field="shortenBody"
+          />
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="shortenBody" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="jacket-sleeves-${idx}">Sleeves</label>
+        <div class="stepper" id="jacket-sleeves-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="sleeves" data-dir="-1">-</button>
+          <input
+            class="stepper-value-input"
+            type="text"
+            inputmode="none"
+            value="${formatValue("sleeves")}"
+            data-action="clear-value"
+            data-type="jacket"
+            data-index="${idx}"
+            data-field="sleeves"
+          />
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="sleeves" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="jacket-tightenCollar-${idx}">Tighten Collar</label>
+        <div class="stepper" id="jacket-tightenCollar-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="tightenCollar" data-dir="-1">-</button>
+          <input
+            class="stepper-value-input"
+            type="text"
+            inputmode="none"
+            value="${formatValue("tightenCollar")}"
+            data-action="clear-value"
+            data-type="jacket"
+            data-index="${idx}"
+            data-field="tightenCollar"
+          />
+          <button type="button" class="stepper-btn" data-action="step" data-type="jacket" data-index="${idx}" data-field="tightenCollar" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="jacket-buttons-${idx}">Buttons</label>
+        <div class="stepper">
+          <select id="jacket-buttons-${idx}" class="button-select" data-type="jacket" data-index="${idx}" data-field="buttons">
+            ${buildButtonsOptions(item?.buttons || "")}
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTrouserMeasurements(item, idx) {
+  const formatValue = (field) => formatSignedQuarter(item?.[field] || 0);
+  return `
+    <div class="measurement-controls">
+      <div class="measurement-row">
+        <label for="trouser-waist-${idx}">Waist</label>
+        <div class="stepper" id="trouser-waist-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserWaist" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("trouserWaist")}" data-action="clear-value" data-type="trouser" data-index="${idx}" data-field="trouserWaist" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserWaist" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-seat-${idx}">Seat</label>
+        <div class="stepper" id="trouser-seat-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserSeat" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("trouserSeat")}" data-action="clear-value" data-type="trouser" data-index="${idx}" data-field="trouserSeat" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserSeat" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-thigh-${idx}">Thigh</label>
+        <div class="stepper" id="trouser-thigh-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserThigh" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("trouserThigh")}" data-action="clear-value" data-type="trouser" data-index="${idx}" data-field="trouserThigh" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserThigh" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-knee-${idx}">Knee</label>
+        <div class="stepper" id="trouser-knee-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserKnee" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("trouserKnee")}" data-action="clear-value" data-type="trouser" data-index="${idx}" data-field="trouserKnee" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserKnee" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-legOpening-${idx}">Leg Opening</label>
+        <div class="stepper" id="trouser-legOpening-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserLegOpening" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("trouserLegOpening")}" data-action="clear-value" data-type="trouser" data-index="${idx}" data-field="trouserLegOpening" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserLegOpening" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-inseam-${idx}">Inseam</label>
+        <div class="stepper" id="trouser-inseam-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserInseam" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("trouserInseam")}" data-action="clear-value" data-type="trouser" data-index="${idx}" data-field="trouserInseam" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="trouser" data-index="${idx}" data-field="trouserInseam" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-totalLength-${idx}">Total Length</label>
+        <div class="stepper">
+          <input id="trouser-totalLength-${idx}" class="button-select" type="text" data-type="trouser" data-index="${idx}" data-field="trouserTotalLength" value="${escapeAttr(item.trouserTotalLength || "")}" />
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="trouser-cuff-${idx}">Cuff</label>
+        <div class="stepper">
+          <select id="trouser-cuff-${idx}" class="button-select" data-type="trouser" data-index="${idx}" data-field="trouserCuff">
+            ${buildOptions(["No Cuff", "1 1/2 in Cuff", "2 in Cuff"], item?.trouserCuff || "")}
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderShirtMeasurements(item, idx) {
+  const formatValue = (field) => formatSignedQuarter(item?.[field] || 0);
+  return `
+    <div class="measurement-controls">
+      <div class="measurement-row">
+        <label for="shirt-sleeve-${idx}">Sleeve Length</label>
+        <div class="stepper" id="shirt-sleeve-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtSleeve" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("shirtSleeve")}" data-action="clear-value" data-type="shirt" data-index="${idx}" data-field="shirtSleeve" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtSleeve" data-dir="1">+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="shirt-body-${idx}">Body Length</label>
+        <div class="stepper" id="shirt-body-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtBody" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("shirtBody")}" data-action="clear-value" data-type="shirt" data-index="${idx}" data-field="shirtBody" />
+          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtBody" data-dir="1">+</button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function formatMultiline(text) {
@@ -60,7 +322,7 @@ function formatMultiline(text) {
     .filter(Boolean);
 
   if (!lines.length) {
-    return "None";
+    return "";
   }
 
   return lines.map((line) => `• ${escapeHtml(line)}`).join("<br>");
@@ -155,6 +417,14 @@ function renderItemList(type) {
     .map((item, idx) => {
       const canRemove = items.length > 1;
       const itemTitle = idx === 0 ? label : `${label} ${idx + 1}`;
+      const measurementBlock =
+        type === "jacket"
+          ? renderJacketMeasurements(item, idx)
+          : type === "trouser"
+            ? renderTrouserMeasurements(item, idx)
+            : type === "shirt"
+              ? renderShirtMeasurements(item, idx)
+              : "";
       return `
         <section class="repeat-item" data-type="${type}" data-index="${idx}">
           <p class="repeat-item-title">${itemTitle}</p>
@@ -175,7 +445,8 @@ function renderItemList(type) {
               value="${escapeAttr(item.description)}"
             />
           </div>
-          <label for="${type}-adjustments-${idx}">Adjustments</label>
+          ${measurementBlock}
+          <label for="${type}-adjustments-${idx}">Additional Notes</label>
           <textarea
             id="${type}-adjustments-${idx}"
             rows="5"
@@ -200,7 +471,7 @@ function handleDynamicInput(event) {
     return;
   }
 
-  const { type, field, index } = target.dataset;
+  const { type, field, index, action } = target.dataset;
   if (!type || !field || index === undefined) {
     return;
   }
@@ -215,19 +486,58 @@ function handleDynamicInput(event) {
     return;
   }
 
+  if (action === "clear-value") {
+    const rawValue = target.value.trim();
+    if (!rawValue) {
+      items[idx][field] = 0;
+      renderItemList(type);
+      onInputChange();
+      return;
+    }
+    const formatted = formatSignedQuarter(items[idx][field] || 0);
+    if (target.value !== formatted) {
+      target.value = formatted;
+    }
+    return;
+  }
+
   items[idx][field] = target.value;
   onInputChange();
 }
 
 function handleDynamicClick(event) {
   const target = event.target;
-  if (!target || !target.dataset || target.dataset.action !== "remove") {
+  if (!target || !target.dataset) {
     return;
   }
 
+  const action = target.dataset.action;
   const type = target.dataset.type;
   const idx = Number(target.dataset.index);
-  if (!type || Number.isNaN(idx)) {
+  if (!action || !type || Number.isNaN(idx)) {
+    return;
+  }
+
+  if (action === "step") {
+    const field = target.dataset.field;
+    const dir = Number(target.dataset.dir);
+    if (!field || Number.isNaN(dir)) {
+      return;
+    }
+
+    const items = type === "jacket" ? jackets : type === "trouser" ? trousers : type === "shirt" ? shirts : null;
+    if (!items || !items[idx]) {
+      return;
+    }
+
+    const current = Number(items[idx][field]) || 0;
+    items[idx][field] = current + dir;
+    renderItemList(type);
+    onInputChange();
+    return;
+  }
+
+  if (action !== "remove") {
     return;
   }
 
@@ -265,37 +575,135 @@ function renderOutput() {
 
   if (jacketFilled.length) {
     garmentSections.push(
-      ...jacketFilled.map((entry, idx) => `
-        <section class="garment-output-block">
-          ${entry.size ? `<p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>` : ""}
-          ${entry.description ? `<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>` : ""}
-          <p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Adjustments:</strong><br>${formatMultiline(entry.adjustments)}</p>
-        </section>
-      `),
+      ...jacketFilled.map((entry, idx) => {
+        const measurements = [];
+        if (Number(entry.halfBack)) {
+          measurements.push(`<p><strong>1/2 Back:</strong> ${formatSignedQuarter(entry.halfBack)} in</p>`);
+        }
+        if (Number(entry.halfWaist)) {
+          measurements.push(`<p><strong>1/2 Waist:</strong> ${formatSignedQuarter(entry.halfWaist)} in</p>`);
+        }
+        if (Number(entry.shortenBody)) {
+          measurements.push(`<p><strong>Shorten Body:</strong> ${formatSignedQuarter(entry.shortenBody)} in</p>`);
+        }
+        if (Number(entry.sleeves)) {
+          measurements.push(`<p><strong>Sleeves:</strong> ${formatSignedQuarter(entry.sleeves)} in</p>`);
+        }
+        if (Number(entry.tightenCollar)) {
+          measurements.push(`<p><strong>Tighten Collar:</strong> ${formatSignedQuarter(entry.tightenCollar)} in</p>`);
+        }
+        if ((entry.buttons || "").trim()) {
+          measurements.push(`<p><strong>Buttons:</strong> ${escapeHtml(entry.buttons)}</p>`);
+        }
+
+        const notes = formatMultiline(entry.adjustments);
+        const outputPieces = [];
+        if (entry.size) outputPieces.push(`<p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>`);
+        if (entry.description) outputPieces.push(`<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>`);
+        outputPieces.push(...measurements);
+        if (notes) {
+          outputPieces.push(
+            `<p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Additional Notes:</strong><br>${notes}</p>`,
+          );
+        }
+
+        if (!outputPieces.length) {
+          return "";
+        }
+        return `
+          <section class="garment-output-block">
+            ${outputPieces.join("")}
+          </section>
+        `;
+      }),
     );
   }
 
   if (trouserFilled.length) {
     garmentSections.push(
-      ...trouserFilled.map((entry, idx) => `
-        <section class="garment-output-block">
-          ${entry.size ? `<p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>` : ""}
-          ${entry.description ? `<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>` : ""}
-          <p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Adjustments:</strong><br>${formatMultiline(entry.adjustments)}</p>
-        </section>
-      `),
+      ...trouserFilled.map((entry, idx) => {
+        const notes = formatMultiline(entry.adjustments);
+        const measurements = [];
+        if (Number(entry.trouserWaist)) {
+          measurements.push(`<p><strong>Waist:</strong> ${formatSignedQuarter(entry.trouserWaist)} in</p>`);
+        }
+        if (Number(entry.trouserSeat)) {
+          measurements.push(`<p><strong>Seat:</strong> ${formatSignedQuarter(entry.trouserSeat)} in</p>`);
+        }
+        if (Number(entry.trouserThigh)) {
+          measurements.push(`<p><strong>Thigh:</strong> ${formatSignedQuarter(entry.trouserThigh)} in</p>`);
+        }
+        if (Number(entry.trouserKnee)) {
+          measurements.push(`<p><strong>Knee:</strong> ${formatSignedQuarter(entry.trouserKnee)} in</p>`);
+        }
+        if (Number(entry.trouserLegOpening)) {
+          measurements.push(`<p><strong>Leg Opening:</strong> ${formatSignedQuarter(entry.trouserLegOpening)} in</p>`);
+        }
+        if (Number(entry.trouserInseam)) {
+          measurements.push(`<p><strong>Inseam:</strong> ${formatSignedQuarter(entry.trouserInseam)} in</p>`);
+        }
+        if ((entry.trouserTotalLength || "").trim()) {
+          measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)} in</p>`);
+        }
+        if ((entry.trouserCuff || "").trim()) {
+          measurements.push(`<p><strong>Cuff:</strong> ${escapeHtml(entry.trouserCuff)}</p>`);
+        }
+
+        const outputPieces = [];
+        if (entry.size) outputPieces.push(`<p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>`);
+        if (entry.description) outputPieces.push(`<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>`);
+        outputPieces.push(...measurements);
+        if (notes) {
+          outputPieces.push(
+            `<p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Additional Notes:</strong><br>${notes}</p>`,
+          );
+        }
+
+        if (!outputPieces.length) {
+          return "";
+        }
+
+        return `
+          <section class="garment-output-block">
+            ${outputPieces.join("")}
+          </section>
+        `;
+      }),
     );
   }
 
   if (shirtFilled.length) {
     garmentSections.push(
-      ...shirtFilled.map((entry, idx) => `
-        <section class="garment-output-block">
-          ${entry.size ? `<p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>` : ""}
-          ${entry.description ? `<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>` : ""}
-          <p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Adjustments:</strong><br>${formatMultiline(entry.adjustments)}</p>
-        </section>
-      `),
+      ...shirtFilled.map((entry, idx) => {
+        const notes = formatMultiline(entry.adjustments);
+        const measurements = [];
+        if (Number(entry.shirtSleeve)) {
+          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(entry.shirtSleeve)} in</p>`);
+        }
+        if (Number(entry.shirtBody)) {
+          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(entry.shirtBody)} in</p>`);
+        }
+
+        const outputPieces = [];
+        if (entry.size) outputPieces.push(`<p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>`);
+        if (entry.description) outputPieces.push(`<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>`);
+        outputPieces.push(...measurements);
+        if (notes) {
+          outputPieces.push(
+            `<p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Additional Notes:</strong><br>${notes}</p>`,
+          );
+        }
+
+        if (!outputPieces.length) {
+          return "";
+        }
+
+        return `
+          <section class="garment-output-block">
+            ${outputPieces.join("")}
+          </section>
+        `;
+      }),
     );
   }
 
@@ -308,6 +716,7 @@ function renderOutput() {
     <p><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
     ${balanceDue ? `<p><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
     ${garmentSections.join("")}
+    <p class="meta">Generated: ${escapeHtml(now.toLocaleString())}</p>
   `;
 }
 
@@ -343,7 +752,6 @@ function saveToLocalFile() {
     .slice(0, 40);
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
   const filename = `${safeName || "ticket"}-${datePart}.doc`;
-
   renderOutput();
 
   const content = `<!doctype html>
@@ -373,6 +781,7 @@ function saveToLocalFile() {
       .output p { margin: 0.03in 0; }
       .output .doc-title { font-size: 12pt; margin: 0 0 0.06in; color: #3d352c; }
       .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.08in; }
+      .output .meta { margin: 0.08in 0 0; color: #6c645d; font-size: 6pt; }
       .output .garment-output-block {
         margin-top: 0.08in;
         padding-top: 0.06in;
@@ -437,6 +846,12 @@ function loadFromStorage() {
         size: item?.size || "",
         description: item?.description || "",
         adjustments: item?.adjustments || "",
+        halfBack: Number(item?.halfBack) || 0,
+        halfWaist: Number(item?.halfWaist) || 0,
+        shortenBody: Number(item?.shortenBody) || 0,
+        sleeves: Number(item?.sleeves) || 0,
+        tightenCollar: Number(item?.tightenCollar) || 0,
+        buttons: item?.buttons || "",
       }));
       if (!jackets.length) jackets = [createEmptyItem()];
     } else {
@@ -445,11 +860,23 @@ function loadFromStorage() {
           size: parsed.jacketSize || "",
           description: parsed.jacketDescription || "",
           adjustments: parsed.jacketAdjustments || "",
+          halfBack: Number(parsed.jacketHalfBack) || 0,
+          halfWaist: Number(parsed.jacketHalfWaist) || 0,
+          shortenBody: Number(parsed.jacketShortenBody) || 0,
+          sleeves: Number(parsed.jacketSleeves) || 0,
+          tightenCollar: Number(parsed.jacketTightenCollar) || 0,
+          buttons: parsed.jacketButtons || "",
         },
         {
           size: parsed.jacketSize2 || "",
           description: parsed.jacketDescription2 || "",
           adjustments: parsed.jacketAdjustments2 || "",
+          halfBack: Number(parsed.jacketHalfBack2) || 0,
+          halfWaist: Number(parsed.jacketHalfWaist2) || 0,
+          shortenBody: Number(parsed.jacketShortenBody2) || 0,
+          sleeves: Number(parsed.jacketSleeves2) || 0,
+          tightenCollar: Number(parsed.jacketTightenCollar2) || 0,
+          buttons: parsed.jacketButtons2 || "",
         },
       );
     }
@@ -459,6 +886,14 @@ function loadFromStorage() {
         size: item?.size || "",
         description: item?.description || "",
         adjustments: item?.adjustments || "",
+        trouserWaist: Number(item?.trouserWaist) || 0,
+        trouserSeat: Number(item?.trouserSeat) || 0,
+        trouserThigh: Number(item?.trouserThigh) || 0,
+        trouserKnee: Number(item?.trouserKnee) || 0,
+        trouserLegOpening: Number(item?.trouserLegOpening) || 0,
+        trouserInseam: Number(item?.trouserInseam) || 0,
+        trouserTotalLength: item?.trouserTotalLength || "",
+        trouserCuff: item?.trouserCuff || "",
       }));
       if (!trousers.length) trousers = [createEmptyItem()];
     } else {
@@ -481,6 +916,8 @@ function loadFromStorage() {
         size: item?.size || "",
         description: item?.description || "",
         adjustments: item?.adjustments || "",
+        shirtSleeve: Number(item?.shirtSleeve) || 0,
+        shirtBody: Number(item?.shirtBody) || 0,
       }));
       if (!shirts.length) shirts = [createEmptyItem()];
     } else {
