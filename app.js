@@ -142,7 +142,7 @@ function buildOptions(options, selectedValue) {
 
 function renderItemList(type) {
   const map = {
-    jacket: { items: jackets, container: jacketItemsEl, label: "Jacket", sizes: JACKET_SIZES },
+    jacket: { items: jackets, container: jacketItemsEl, label: "Jacket / Suit", sizes: JACKET_SIZES },
     trouser: { items: trousers, container: trouserItemsEl, label: "Trouser", sizes: TROUSER_SIZES },
     shirt: { items: shirts, container: shirtItemsEl, label: "Shirt", sizes: SHIRT_SIZES },
   };
