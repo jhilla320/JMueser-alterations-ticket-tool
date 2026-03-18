@@ -456,6 +456,21 @@ button:hover {
     gap: 0.35rem;
     flex-wrap: nowrap;
   }
+
+  .stepper-btn {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .stepper-value,
+  .stepper-value-input {
+    width: 4.1rem;
+    padding: 0.3rem 0.4rem;
+  }
+
+  .stepper .button-select {
+    width: 9.1rem;
+  }
 }
 
 @media print {
