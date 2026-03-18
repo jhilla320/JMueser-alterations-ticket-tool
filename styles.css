@@ -422,6 +422,7 @@ button:hover {
   padding: 0.22in;
   background: #fffdfa;
   line-height: 1.55;
+  overflow: visible;
 }
 
 .output p {

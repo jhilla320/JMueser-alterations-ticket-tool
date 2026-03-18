@@ -29,6 +29,7 @@ const garmentPanels = Array.from(document.querySelectorAll(".garment-panel"));
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
+const MIN_PRINT_SCALE = 0.9;
 
 let jackets = [];
 let trousers = [];
@@ -390,6 +391,36 @@ function setActiveTab(tabName, shouldPersist = true) {
   if (shouldPersist) {
     saveToStorage();
   }
+}
+
+function resetPrintScale() {
+  printArea.style.transform = "";
+  printArea.style.transformOrigin = "";
+  printArea.style.width = "";
+}
+
+function getPrintScale() {
+  const maxHeight = printArea.clientHeight;
+  const contentHeight = printArea.scrollHeight;
+  if (!maxHeight || !contentHeight) {
+    return 1;
+  }
+
+  const scale = maxHeight / contentHeight;
+  return Math.min(1, Math.max(MIN_PRINT_SCALE, scale));
+}
+
+function applyPrintScale() {
+  resetPrintScale();
+  const scale = getPrintScale();
+  if (scale >= 1) {
+    return scale;
+  }
+
+  printArea.style.transform = `scale(${scale})`;
+  printArea.style.transformOrigin = "top left";
+  printArea.style.width = `${100 / scale}%`;
+  return scale;
 }
 
 function isIOSDevice() {
@@ -784,6 +815,7 @@ function saveToLocalFile() {
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
   const filename = `${safeName || "ticket"}-${datePart}.doc`;
   renderOutput();
+  resetPrintScale();
 
   const content = `<!doctype html>
 <html lang="en">
@@ -1053,8 +1085,11 @@ printBtn.addEventListener("click", () => {
 
   renderOutput();
   saveToStorage();
+  applyPrintScale();
   window.print();
 });
+
+window.addEventListener("afterprint", resetPrintScale);
 
 saveBtn.addEventListener("click", () => {
   const missing = validateBeforePrint();
