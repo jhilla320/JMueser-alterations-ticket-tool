@@ -56,6 +56,7 @@ body {
 
 .field-grid > div {
   min-width: 0;
+  overflow: hidden;
 }
 
 label {
@@ -80,6 +81,22 @@ input[type="date"] {
   min-width: 0;
   width: 100%;
   display: block;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+}
+
+@supports (-webkit-touch-callout: none) {
+  input[type="date"] {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 textarea {
@@ -470,6 +487,12 @@ button:hover {
 
   .stepper .button-select {
     width: 9.1rem;
+  }
+
+  input[type="date"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 }
 
