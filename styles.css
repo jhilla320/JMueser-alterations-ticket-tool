@@ -448,8 +448,13 @@ button:hover {
   }
 
   .measurement-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(120px, 1fr) auto;
     gap: 0.35rem;
+  }
+
+  .stepper {
+    gap: 0.35rem;
+    flex-wrap: nowrap;
   }
 }
 
