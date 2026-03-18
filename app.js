@@ -30,6 +30,8 @@ const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
 const MIN_PRINT_SCALE = 0.9;
+const PRINT_HEIGHT_IN = 5.8;
+const CSS_PX_PER_IN = 96;
 
 let jackets = [];
 let trousers = [];
@@ -400,13 +402,17 @@ function resetPrintScale() {
 }
 
 function getPrintScale() {
-  const maxHeight = printArea.clientHeight;
   const contentHeight = printArea.scrollHeight;
-  if (!maxHeight || !contentHeight) {
+  if (!contentHeight) {
     return 1;
   }
 
-  const scale = maxHeight / contentHeight;
+  const targetHeight = PRINT_HEIGHT_IN * CSS_PX_PER_IN;
+  if (contentHeight <= targetHeight) {
+    return 1;
+  }
+
+  const scale = targetHeight / contentHeight;
   return Math.min(1, Math.max(MIN_PRINT_SCALE, scale));
 }
 
