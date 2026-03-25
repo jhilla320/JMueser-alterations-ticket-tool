@@ -771,8 +771,11 @@ function renderOutput() {
 
         const notes = formatMultiline(entry.adjustments);
         const outputPieces = [];
-        if (entry.size) outputPieces.push(`<p><strong>${idx === 0 ? "Jacket" : `Jacket ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>`);
-        if (entry.description) outputPieces.push(`<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>`);
+        const jacketLabel = idx === 0 ? "Jacket" : `Jacket ${idx + 1}`;
+        const sizeDesc = [entry.size, entry.description].filter((value) => (value || "").trim());
+        if (sizeDesc.length) {
+          outputPieces.push(`<p><strong>${jacketLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
+        }
         outputPieces.push(...measurements);
         if (notes) {
           outputPieces.push(
@@ -823,8 +826,11 @@ function renderOutput() {
         }
 
         const outputPieces = [];
-        if (entry.size) outputPieces.push(`<p><strong>${idx === 0 ? "Trouser" : `Trouser ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>`);
-        if (entry.description) outputPieces.push(`<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>`);
+        const trouserLabel = idx === 0 ? "Trouser" : `Trouser ${idx + 1}`;
+        const sizeDesc = [entry.size, entry.description].filter((value) => (value || "").trim());
+        if (sizeDesc.length) {
+          outputPieces.push(`<p><strong>${trouserLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
+        }
         outputPieces.push(...measurements);
         if (notes) {
           outputPieces.push(
@@ -858,8 +864,11 @@ function renderOutput() {
         }
 
         const outputPieces = [];
-        if (entry.size) outputPieces.push(`<p><strong>${idx === 0 ? "Shirt" : `Shirt ${idx + 1}`} Size:</strong> ${escapeHtml(entry.size)}</p>`);
-        if (entry.description) outputPieces.push(`<p><strong>Description:</strong> ${escapeHtml(entry.description)}</p>`);
+        const shirtLabel = idx === 0 ? "Shirt" : `Shirt ${idx + 1}`;
+        const sizeDesc = [entry.size, entry.description].filter((value) => (value || "").trim());
+        if (sizeDesc.length) {
+          outputPieces.push(`<p><strong>${shirtLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
+        }
         outputPieces.push(...measurements);
         if (notes) {
           outputPieces.push(
