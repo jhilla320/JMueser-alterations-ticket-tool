@@ -350,9 +350,16 @@ textarea {
 }
 
 .actions {
-  display: grid;
-  gap: 0.35rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
   margin-top: 0.85rem;
+}
+
+.actions-left {
+  display: grid;
+  gap: 0.65rem;
 }
 
 .actions-row {
@@ -366,9 +373,10 @@ textarea {
   justify-content: flex-start;
 }
 
-.actions-row-space {
-  justify-content: space-between;
-  align-items: flex-end;
+.actions-right {
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
 }
 
 .highlight-btn {
