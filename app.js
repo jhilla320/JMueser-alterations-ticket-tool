@@ -587,7 +587,8 @@ function renderItemList(type) {
   container.innerHTML = items
     .map((item, idx) => {
       const canRemove = items.length > 1;
-      const itemTitle = idx === 0 ? label : `${label} ${idx + 1}`;
+      const showTitle = items.length > 1;
+      const itemTitle = showTitle ? (idx === 0 ? label : `${label} ${idx + 1}`) : "";
       const measurementBlock =
         type === "jacket"
           ? renderJacketMeasurements(item, idx)
@@ -598,7 +599,7 @@ function renderItemList(type) {
               : "";
       return `
         <section class="repeat-item" data-type="${type}" data-index="${idx}">
-          <p class="repeat-item-title">${itemTitle}</p>
+          ${itemTitle ? `<p class="repeat-item-title">${itemTitle}</p>` : ""}
           <div class="garment-field size-row">
             <label for="${type}-size-${idx}">Size</label>
             <select id="${type}-size-${idx}" data-type="${type}" data-index="${idx}" data-field="size">
