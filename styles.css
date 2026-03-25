@@ -1,6 +1,6 @@
 :root {
-  --bg: #f4f1ea;
-  --paper: #fffdf9;
+  --bg: #fefdf9;
+  --paper: #fefdf9;
   --ink: #1e1d1a;
   --accent: #c65a2e;
   --accent-dark: #9d461f;
@@ -16,7 +16,7 @@ body {
   margin: 0;
   font-family: "Avenir Next", "Trebuchet MS", sans-serif;
   color: var(--ink);
-  background: white;
+  background: var(--bg);
   min-height: 100vh;
 }
 
@@ -360,6 +360,19 @@ textarea {
   gap: 0.65rem;
   flex-wrap: wrap;
   align-items: center;
+}
+
+.actions-row-single {
+  justify-content: flex-start;
+}
+
+.highlight-btn {
+  background: #e8c810;
+  color: #2b1f00;
+}
+
+.highlight-btn:hover {
+  background: #d9bb0b;
 }
 
 #driveAuthBtn,

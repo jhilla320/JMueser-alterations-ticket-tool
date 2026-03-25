@@ -484,7 +484,9 @@ function ensureDriveClient() {
 
 function updateDriveButtons() {
   const token = getDriveToken();
-  driveAuthBtn.style.display = token ? "none" : "inline-flex";
+  const exp = getDriveTokenExpiry();
+  const isValid = token && exp && Date.now() < exp - 30_000;
+  driveAuthBtn.style.display = isValid ? "none" : "inline-flex";
 }
 
 function requestDriveToken(prompt) {
