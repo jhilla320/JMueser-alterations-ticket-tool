@@ -127,6 +127,19 @@ function formatSignedQuarter(value) {
   return `${sign} ${formatQuarter(numeric)}`;
 }
 
+function formatFileBaseName(name) {
+  const normalized = String(name || "ticket")
+    .trim()
+    .replace(/[^a-z0-9]+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) return "Ticket";
+  return normalized
+    .split(" ")
+    .map((part) => (part ? part[0].toUpperCase() + part.slice(1).toLowerCase() : part))
+    .join(" ");
+}
+
 function buildButtonsOptions(selectedValue) {
   return buildOptions(["1", "2", "3", "4"], selectedValue);
 }
@@ -895,13 +908,9 @@ function saveToStorage() {
 
 function saveToLocalFile() {
   const state = buildState();
-  const safeName = (state.customerName || "ticket")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
+  const safeName = formatFileBaseName(state.customerName).slice(0, 40);
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-  const filename = `${safeName || "ticket"}-${datePart}.doc`;
+  const filename = `${safeName}_${datePart}.doc`;
   renderOutput();
   resetPrintScale();
 
@@ -1208,13 +1217,9 @@ driveSaveBtn.addEventListener("click", async () => {
   renderOutput();
   resetPrintScale();
 
-  const safeName = (state.customerName || "ticket")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
+  const safeName = formatFileBaseName(state.customerName).slice(0, 40);
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-  const filename = `${safeName || "ticket"}-${datePart}.doc`;
+  const filename = `${safeName}_${datePart}.doc`;
 
   try {
     const token = await getValidDriveToken();
