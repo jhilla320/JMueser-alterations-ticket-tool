@@ -358,8 +358,10 @@ textarea {
 }
 
 .actions-left {
-  display: grid;
+  display: flex;
   gap: 0.65rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .actions-row {
@@ -367,10 +369,6 @@ textarea {
   gap: 0.65rem;
   flex-wrap: wrap;
   align-items: flex-end;
-}
-
-.actions-row-single {
-  justify-content: flex-start;
 }
 
 .actions-right {
