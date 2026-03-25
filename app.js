@@ -21,11 +21,15 @@ const addShirtBtn = document.getElementById("addShirtBtn");
 const printArea = document.getElementById("printArea");
 const saveStatus = document.getElementById("saveStatus");
 const saveBtn = document.getElementById("saveBtn");
+const driveAuthBtn = document.getElementById("driveAuthBtn");
+const driveSaveBtn = document.getElementById("driveSaveBtn");
 const printBtn = document.getElementById("printBtn");
 const clearBtn = document.getElementById("clearBtn");
 const garmentTabs = Array.from(document.querySelectorAll(".garment-tab"));
 const garmentPanels = Array.from(document.querySelectorAll(".garment-panel"));
 
+const DRIVE_API_BASE = "https://jmueser-drive.onrender.com";
+const DRIVE_TOKEN_KEY = "driveSessionToken";
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
@@ -396,9 +400,7 @@ function setActiveTab(tabName, shouldPersist = true) {
 }
 
 function resetPrintScale() {
-  printArea.style.transform = "";
-  printArea.style.transformOrigin = "";
-  printArea.style.width = "";
+  printArea.style.removeProperty("--print-scale");
 }
 
 function getPrintScale() {
@@ -423,10 +425,36 @@ function applyPrintScale() {
     return scale;
   }
 
-  printArea.style.transform = `scale(${scale})`;
-  printArea.style.transformOrigin = "top left";
-  printArea.style.width = `${100 / scale}%`;
+  printArea.style.setProperty("--print-scale", scale.toFixed(3));
   return scale;
+}
+
+function getDriveToken() {
+  return localStorage.getItem(DRIVE_TOKEN_KEY) || "";
+}
+
+function setDriveToken(token) {
+  if (!token) return;
+  localStorage.setItem(DRIVE_TOKEN_KEY, token);
+  saveStatus.textContent = "Google Drive connected";
+}
+
+function stripDriveParams() {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("drive_auth")) {
+    url.searchParams.delete("drive_auth");
+    url.searchParams.delete("drive_token");
+    window.history.replaceState({}, document.title, url.toString());
+  }
+}
+
+function handleDriveAuthReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("drive_token");
+  if (token) {
+    setDriveToken(token);
+  }
+  stripDriveParams();
 }
 
 function isIOSDevice() {
@@ -823,7 +851,23 @@ function saveToLocalFile() {
   renderOutput();
   resetPrintScale();
 
-  const content = `<!doctype html>
+  const content = buildExportHtml();
+  const blob = new Blob([content], { type: "application/msword;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  saveToStorage();
+  saveStatus.textContent = `Saved file: ${filename}`;
+}
+
+function buildExportHtml() {
+  return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -865,19 +909,6 @@ function saveToLocalFile() {
     </article>
   </body>
 </html>`;
-
-  const blob = new Blob([content], { type: "application/msword;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-
-  saveToStorage();
-  saveStatus.textContent = `Saved file: ${filename}`;
 }
 
 function parseLegacyArray(primary, secondary) {
@@ -1097,6 +1128,60 @@ printBtn.addEventListener("click", () => {
 
 window.addEventListener("afterprint", resetPrintScale);
 
+driveAuthBtn.addEventListener("click", () => {
+  const returnUrl = window.location.href;
+  window.location.href = `${DRIVE_API_BASE}/auth/start?returnUrl=${encodeURIComponent(returnUrl)}`;
+});
+
+driveSaveBtn.addEventListener("click", async () => {
+  const missing = validateBeforePrint();
+  if (missing.length) {
+    alert(`Please complete these required fields before saving:\n- ${missing.join("\n- ")}`);
+    return;
+  }
+
+  const token = getDriveToken();
+  if (!token) {
+    alert("Connect Google Drive first.");
+    return;
+  }
+
+  const state = buildState();
+  renderOutput();
+  resetPrintScale();
+
+  const safeName = (state.customerName || "ticket")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
+  const filename = `${safeName || "ticket"}-${datePart}.doc`;
+
+  try {
+    const response = await fetch(`${DRIVE_API_BASE}/api/drive/upload`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        filename,
+        content: buildExportHtml(),
+        mimeType: "application/msword",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Upload failed");
+    }
+
+    saveStatus.textContent = `Saved to Drive: ${filename}`;
+  } catch (err) {
+    alert("Drive upload failed. Please reconnect Drive and try again.");
+  }
+});
+
 saveBtn.addEventListener("click", () => {
   const missing = validateBeforePrint();
   if (missing.length) {
@@ -1212,4 +1297,5 @@ function setupIOSDateFallback() {
 }
 
 setupIOSDateFallback();
+handleDriveAuthReturn();
 loadFromStorage();

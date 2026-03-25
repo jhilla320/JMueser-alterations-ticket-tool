@@ -545,23 +545,28 @@ button:hover {
     border-radius: 0;
     padding: 0;
     background: white;
-    font-size: 10pt;
-    line-height: 1.25;
+    font-size: calc(10pt * var(--print-scale, 1));
+    line-height: calc(1.25 * var(--print-scale, 1));
   }
 
   .output .doc-title {
-    font-size: 12pt;
-    margin: 0 0 0.06in;
+    font-size: calc(12pt * var(--print-scale, 1));
+    margin: 0 0 calc(0.06in * var(--print-scale, 1));
   }
 
   .output p {
-    margin: 0.03in 0;
+    margin: calc(0.03in * var(--print-scale, 1)) 0;
   }
 
   .output .garment-output-block {
-    margin-top: 0.08in;
-    padding-top: 0.06in;
+    margin-top: calc(0.08in * var(--print-scale, 1));
+    padding-top: calc(0.06in * var(--print-scale, 1));
     border-top: 1px solid #c8c0b4;
     break-inside: avoid;
+  }
+
+  .output .meta {
+    margin: calc(0.08in * var(--print-scale, 1)) 0 0;
+    font-size: calc(6pt * var(--print-scale, 1));
   }
 }
