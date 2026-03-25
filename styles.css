@@ -386,6 +386,15 @@ textarea {
   background: #294e40;
 }
 
+#saveBtn {
+  background: #325f4e;
+  color: #ffffff;
+}
+
+#saveBtn:hover {
+  background: #294e40;
+}
+
 #driveAuthBtn,
 #driveSaveBtn {
   background: #2f6f4f;
