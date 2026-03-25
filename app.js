@@ -588,7 +588,7 @@ function renderItemList(type) {
     .map((item, idx) => {
       const canRemove = items.length > 1;
       const showTitle = items.length > 1;
-      const itemTitle = showTitle ? (idx === 0 ? label : `${label} ${idx + 1}`) : "";
+      const itemTitle = showTitle && idx > 0 ? `${label} ${idx + 1}` : "";
       const measurementBlock =
         type === "jacket"
           ? renderJacketMeasurements(item, idx)
