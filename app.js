@@ -621,7 +621,7 @@ function renderItemList(type) {
           <label for="${type}-adjustments-${idx}">Additional Notes</label>
           <textarea
             id="${type}-adjustments-${idx}"
-            rows="5"
+            rows="3"
             data-type="${type}"
             data-index="${idx}"
             data-field="adjustments"
