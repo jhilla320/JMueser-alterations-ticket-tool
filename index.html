@@ -97,10 +97,14 @@
         </section>
 
         <div class="actions">
-          <button id="saveBtn" type="button">Save</button>
-          <button id="driveAuthBtn" type="button">Connect Google Drive</button>
-          <button id="driveSaveBtn" type="button">Save to Drive</button>
-          <button id="printBtn" type="button">Print</button>
+          <div class="actions-row">
+            <button id="printBtn" type="button">Print</button>
+            <button id="driveSaveBtn" type="button">Save to Google</button>
+          </div>
+          <div class="actions-row">
+            <button id="saveBtn" type="button">Save Locally</button>
+            <button id="driveAuthBtn" type="button">Connect Google Drive</button>
+          </div>
           <span id="saveStatus" aria-live="polite">Not saved yet</span>
           <button id="clearBtn" class="danger-btn" type="button">Clear All</button>
         </div>

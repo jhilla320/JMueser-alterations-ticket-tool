@@ -350,11 +350,16 @@ textarea {
 }
 
 .actions {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.actions-row {
   display: flex;
   gap: 0.65rem;
-  align-items: center;
   flex-wrap: wrap;
-  margin-top: 0.85rem;
+  align-items: center;
 }
 
 #driveAuthBtn,

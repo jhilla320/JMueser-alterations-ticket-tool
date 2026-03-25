@@ -460,11 +460,13 @@ function setDriveToken(token, expiresInSeconds) {
   localStorage.setItem(DRIVE_TOKEN_KEY, token);
   localStorage.setItem(DRIVE_TOKEN_EXP_KEY, String(expiry));
   saveStatus.textContent = "Google Drive connected";
+  updateDriveButtons();
 }
 
 function clearDriveToken() {
   localStorage.removeItem(DRIVE_TOKEN_KEY);
   localStorage.removeItem(DRIVE_TOKEN_EXP_KEY);
+  updateDriveButtons();
 }
 
 function ensureDriveClient() {
@@ -478,6 +480,11 @@ function ensureDriveClient() {
     callback: () => {},
   });
   return driveTokenClient;
+}
+
+function updateDriveButtons() {
+  const token = getDriveToken();
+  driveAuthBtn.style.display = token ? "none" : "inline-flex";
 }
 
 function requestDriveToken(prompt) {
@@ -1369,3 +1376,4 @@ function setupIOSDateFallback() {
 
 setupIOSDateFallback();
 loadFromStorage();
+updateDriveButtons();
