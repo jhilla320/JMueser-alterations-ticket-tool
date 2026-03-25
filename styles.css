@@ -366,13 +366,18 @@ textarea {
   justify-content: flex-start;
 }
 
+.actions-row-space {
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
 .highlight-btn {
-  background: #e8c810;
-  color: #2b1f00;
+  background: #325f4e;
+  color: #ffffff;
 }
 
 .highlight-btn:hover {
-  background: #d9bb0b;
+  background: #294e40;
 }
 
 #driveAuthBtn,
