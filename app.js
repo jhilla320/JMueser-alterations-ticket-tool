@@ -28,8 +28,10 @@ const clearBtn = document.getElementById("clearBtn");
 const garmentTabs = Array.from(document.querySelectorAll(".garment-tab"));
 const garmentPanels = Array.from(document.querySelectorAll(".garment-panel"));
 
-const DRIVE_API_BASE = "https://jmueser-drive.onrender.com";
-const DRIVE_TOKEN_KEY = "driveSessionToken";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_TOKEN_KEY = "driveAccessToken";
+const DRIVE_TOKEN_EXP_KEY = "driveAccessTokenExp";
+const GOOGLE_CLIENT_ID = "617892178220-84fg83gdjhjssb3et6e5ufjnkb8cn1v2.apps.googleusercontent.com";
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
@@ -429,32 +431,84 @@ function applyPrintScale() {
   return scale;
 }
 
+let driveTokenClient = null;
+
 function getDriveToken() {
   return localStorage.getItem(DRIVE_TOKEN_KEY) || "";
 }
 
-function setDriveToken(token) {
+function getDriveTokenExpiry() {
+  return Number(localStorage.getItem(DRIVE_TOKEN_EXP_KEY) || 0);
+}
+
+function setDriveToken(token, expiresInSeconds) {
   if (!token) return;
+  const expiry = Date.now() + Number(expiresInSeconds || 0) * 1000;
   localStorage.setItem(DRIVE_TOKEN_KEY, token);
+  localStorage.setItem(DRIVE_TOKEN_EXP_KEY, String(expiry));
   saveStatus.textContent = "Google Drive connected";
 }
 
-function stripDriveParams() {
-  const url = new URL(window.location.href);
-  if (url.searchParams.has("drive_auth")) {
-    url.searchParams.delete("drive_auth");
-    url.searchParams.delete("drive_token");
-    window.history.replaceState({}, document.title, url.toString());
-  }
+function clearDriveToken() {
+  localStorage.removeItem(DRIVE_TOKEN_KEY);
+  localStorage.removeItem(DRIVE_TOKEN_EXP_KEY);
 }
 
-function handleDriveAuthReturn() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("drive_token");
-  if (token) {
-    setDriveToken(token);
+function ensureDriveClient() {
+  if (driveTokenClient) return driveTokenClient;
+  if (!window.google?.accounts?.oauth2) {
+    return null;
   }
-  stripDriveParams();
+  driveTokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: () => {},
+  });
+  return driveTokenClient;
+}
+
+function requestDriveToken(prompt) {
+  return new Promise((resolve, reject) => {
+    const client = ensureDriveClient();
+    if (!client) {
+      reject(new Error("Google Identity Services not loaded"));
+      return;
+    }
+    client.callback = (response) => {
+      if (response?.access_token) {
+        setDriveToken(response.access_token, response.expires_in);
+        resolve(response.access_token);
+      } else {
+        reject(new Error("No access token returned"));
+      }
+    };
+    client.requestAccessToken({ prompt });
+  });
+}
+
+async function getValidDriveToken() {
+  const token = getDriveToken();
+  const exp = getDriveTokenExpiry();
+  if (token && exp && Date.now() < exp - 30_000) {
+    return token;
+  }
+  clearDriveToken();
+  return requestDriveToken("");
+}
+
+function buildDriveMultipart({ filename, content, mimeType }) {
+  const boundary = `boundary_${Math.random().toString(36).slice(2)}`;
+  const metadata = { name: filename };
+  const body =
+    `--${boundary}\r\n` +
+    "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+    `${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\n` +
+    `Content-Type: ${mimeType}\r\n\r\n` +
+    `${content}\r\n` +
+    `--${boundary}--`;
+
+  return { body, boundary };
 }
 
 function isIOSDevice() {
@@ -1129,8 +1183,13 @@ printBtn.addEventListener("click", () => {
 window.addEventListener("afterprint", resetPrintScale);
 
 driveAuthBtn.addEventListener("click", () => {
-  const returnUrl = window.location.href;
-  window.location.href = `${DRIVE_API_BASE}/auth/start?returnUrl=${encodeURIComponent(returnUrl)}`;
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "REPLACE_WITH_CLIENT_ID") {
+    alert("Set your Google Client ID in app.js before connecting Drive.");
+    return;
+  }
+  requestDriveToken("consent").catch(() => {
+    alert("Google Drive connection failed. Please try again.");
+  });
 });
 
 driveSaveBtn.addEventListener("click", async () => {
@@ -1140,9 +1199,8 @@ driveSaveBtn.addEventListener("click", async () => {
     return;
   }
 
-  const token = getDriveToken();
-  if (!token) {
-    alert("Connect Google Drive first.");
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "REPLACE_WITH_CLIENT_ID") {
+    alert("Set your Google Client ID in app.js before connecting Drive.");
     return;
   }
 
@@ -1159,26 +1217,34 @@ driveSaveBtn.addEventListener("click", async () => {
   const filename = `${safeName || "ticket"}-${datePart}.doc`;
 
   try {
-    const response = await fetch(`${DRIVE_API_BASE}/api/drive/upload`, {
+    const token = await getValidDriveToken();
+    const { body, boundary } = buildDriveMultipart({
+      filename,
+      content: buildExportHtml(),
+      mimeType: "application/msword",
+    });
+
+    const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
       },
-      body: JSON.stringify({
-        filename,
-        content: buildExportHtml(),
-        mimeType: "application/msword",
-      }),
+      body,
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        clearDriveToken();
+        alert("Drive session expired. Click Save to Drive again.");
+        return;
+      }
       throw new Error("Upload failed");
     }
 
     saveStatus.textContent = `Saved to Drive: ${filename}`;
   } catch (err) {
-    alert("Drive upload failed. Please reconnect Drive and try again.");
+    alert("Drive upload failed. Please try again.");
   }
 });
 
@@ -1297,5 +1363,4 @@ function setupIOSDateFallback() {
 }
 
 setupIOSDateFallback();
-handleDriveAuthReturn();
 loadFromStorage();

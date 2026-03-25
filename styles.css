@@ -357,6 +357,16 @@ textarea {
   margin-top: 0.85rem;
 }
 
+#driveAuthBtn,
+#driveSaveBtn {
+  background: #2f6f4f;
+}
+
+#driveAuthBtn:hover,
+#driveSaveBtn:hover {
+  background: #255840;
+}
+
 button {
   border: none;
   background: var(--accent);
