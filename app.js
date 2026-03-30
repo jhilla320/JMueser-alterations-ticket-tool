@@ -121,7 +121,7 @@ function formatSignedQuarter(value) {
   const numeric = Number(value) || 0;
   if (numeric === 0) return "0";
   const sign = numeric > 0 ? "+" : "-";
-  return `${sign} ${formatQuarter(numeric)}`;
+  return `${sign}${formatQuarter(numeric)}`;
 }
 
 function formatFileBaseName(name) {
