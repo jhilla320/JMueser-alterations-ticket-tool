@@ -858,7 +858,6 @@ function renderOutput() {
   }
 
   printArea.innerHTML = `
-    <h3 class="doc-title">Alterations Ticket</h3>
     ${rushFlag ? '<p class="rush-flag">**RUSH**</p>' : ""}
     <p><strong>Customer Name:</strong> ${escapeHtml(customerName)}</p>
     <p><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
