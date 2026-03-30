@@ -489,7 +489,7 @@ async function getValidDriveToken() {
     return token;
   }
   clearDriveToken();
-  return requestDriveToken("");
+  return requestDriveToken("consent");
 }
 
 function buildDriveMultipart({ filename, content, mimeType }) {
