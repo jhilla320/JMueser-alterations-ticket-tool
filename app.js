@@ -1213,6 +1213,7 @@ driveAuthBtn.addEventListener("click", () => {
 
 driveSaveBtn.addEventListener("click", async () => {
   saveStatus.textContent = "Drive save clicked";
+  await new Promise((resolve) => setTimeout(resolve, 0));
   const missing = validateBeforePrint();
   if (missing.length) {
     alert(`Please complete these required fields before saving:\n- ${missing.join("\n- ")}`);
