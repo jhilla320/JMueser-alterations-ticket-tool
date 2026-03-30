@@ -304,7 +304,7 @@ function renderTrouserMeasurements(item, idx) {
         <label for="trouser-cuff-${idx}">Cuff Style</label>
         <div class="stepper">
           <select id="trouser-cuff-${idx}" class="button-select" data-type="trouser" data-index="${idx}" data-field="trouserCuff">
-            ${buildOptions(["No Cuff", "1 3/4 in Cuff", "2 in Cuff"], item?.trouserCuff || "")}
+            ${buildOptions(["No Cuff", "1 3/4\" Cuff", "2\" Cuff"], item?.trouserCuff || "")}
           </select>
         </div>
       </div>
