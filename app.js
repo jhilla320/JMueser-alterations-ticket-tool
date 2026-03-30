@@ -1203,8 +1203,8 @@ driveAuthBtn.addEventListener("click", () => {
     alert("Set your Google Client ID in app.js before connecting Drive.");
     return;
   }
-  requestDriveToken("consent").catch(() => {
-    alert("Google Drive connection failed. Please try again.");
+  requestDriveToken("consent").catch((err) => {
+    alert(`Google Drive connection failed: ${err.message}`);
   });
 });
 
@@ -1256,7 +1256,7 @@ driveSaveBtn.addEventListener("click", async () => {
 
     saveStatus.textContent = `Saved to Drive: ${filename}`;
   } catch (err) {
-    alert("Drive upload failed. Please try again.");
+    alert(`Drive upload failed: ${err.message}`);
   }
 });
 
