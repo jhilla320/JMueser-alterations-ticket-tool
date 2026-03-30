@@ -488,6 +488,7 @@ async function getValidDriveToken() {
   const token = getDriveToken();
   const exp = getDriveTokenExpiry();
   if (token && exp && Date.now() < exp - 30_000) {
+    saveStatus.textContent = "Using existing Drive token";
     return token;
   }
   clearDriveToken();
@@ -1232,6 +1233,7 @@ driveSaveBtn.addEventListener("click", async () => {
   const filename = `${safeName}_${datePart}.doc`;
 
   try {
+    saveStatus.textContent = "Preparing Drive auth...";
     const token = await getValidDriveToken();
     saveStatus.textContent = "Uploading to Drive...";
     const { body, boundary } = buildDriveMultipart({
