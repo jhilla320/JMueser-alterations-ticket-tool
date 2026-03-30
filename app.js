@@ -472,12 +472,14 @@ function requestDriveToken(prompt) {
     }
     client.callback = (response) => {
       if (response?.access_token) {
+        saveStatus.textContent = "Drive token received";
         setDriveToken(response.access_token, response.expires_in);
         resolve(response.access_token);
       } else {
         reject(new Error("No access token returned"));
       }
     };
+    saveStatus.textContent = "Requesting Drive token...";
     client.requestAccessToken({ prompt });
   });
 }
@@ -1231,6 +1233,7 @@ driveSaveBtn.addEventListener("click", async () => {
 
   try {
     const token = await getValidDriveToken();
+    saveStatus.textContent = "Uploading to Drive...";
     const { body, boundary } = buildDriveMultipart({
       filename,
       content: buildExportHtml(),
@@ -1255,6 +1258,7 @@ driveSaveBtn.addEventListener("click", async () => {
       throw new Error("Upload failed");
     }
 
+    saveStatus.textContent = "Drive upload complete";
     saveStatus.textContent = `Saved to Drive: ${filename}`;
   } catch (err) {
     alert(`Drive upload failed: ${err.message}`);
