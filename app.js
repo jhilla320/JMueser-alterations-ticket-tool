@@ -987,6 +987,10 @@ function buildExportHtml() {
 </html>`;
 }
 
+function resetPrintScale() {
+  return;
+}
+
 function parseLegacyArray(primary, secondary) {
   const arr = [];
   if (hasGarmentData(primary)) arr.push(primary);
