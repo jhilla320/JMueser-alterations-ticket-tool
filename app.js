@@ -304,7 +304,7 @@ function renderTrouserMeasurements(item, idx) {
         <label for="trouser-cuff-${idx}">Cuff Style</label>
         <div class="stepper">
           <select id="trouser-cuff-${idx}" class="button-select" data-type="trouser" data-index="${idx}" data-field="trouserCuff">
-            ${buildOptions(["No Cuff", "1 3/4\" Cuff", "2\" Cuff"], item?.trouserCuff || "")}
+            ${buildOptions(["No Cuff", "1 3/4\"Cuff", "2\"Cuff"], item?.trouserCuff || "")}
           </select>
         </div>
       </div>
@@ -790,7 +790,7 @@ function renderOutput() {
           measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)}"</p>`);
         }
         if ((entry.trouserCuff || "").trim()) {
-          const cuffLabel = entry.trouserCuff.replace(/\bin\b/g, "\"");
+          const cuffLabel = entry.trouserCuff.replace(/\s*"\s*/g, "\"").replace(/\bin\b/g, "\"");
           measurements.push(`<p><strong>Cuff Style:</strong> ${escapeHtml(cuffLabel)}</p>`);
         }
 
