@@ -500,6 +500,10 @@ button:hover {
   font-size: 0.8rem;
 }
 
+.output .client-name {
+  font-size: 1.2rem;
+}
+
 .output .rush-flag {
   color: #b42318;
   font-weight: 800;
@@ -587,15 +591,17 @@ button:hover {
 
   .output {
     width: 3.8in;
-    min-height: 5.8in;
+    min-height: auto;
+    height: auto;
     max-width: none;
     margin: 0;
     border: none;
     border-radius: 0;
     padding: 0;
     background: white;
-    font-size: 11pt;
+    font-size: 10pt;
     line-height: 1.25;
+    page-break-after: avoid;
   }
 
   .output .doc-title {
@@ -616,6 +622,10 @@ button:hover {
 
   .output .meta {
     margin: 0.08in 0 0;
-    font-size: 6.6pt;
+    font-size: 7pt;
+  }
+
+  .output .client-name {
+    font-size: 12pt;
   }
 }

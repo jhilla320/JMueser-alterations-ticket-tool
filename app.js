@@ -884,7 +884,7 @@ function renderOutput() {
 
   printArea.innerHTML = `
     ${rushFlag ? '<p class="rush-flag">**RUSH**</p>' : ""}
-    <p><strong>Client Name:</strong> ${escapeHtml(customerName)}</p>
+    <p class="client-name"><strong>Name:</strong> ${escapeHtml(customerName)}</p>
     <p><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
     <p><strong>Salesperson:</strong> ${escapeHtml(salesperson)}</p>
     <p><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
@@ -1152,7 +1152,7 @@ function onInputChange() {
 
 function validateBeforePrint() {
   const missing = [];
-  if (!customerNameInput.value.trim()) missing.push("Client Name");
+  if (!customerNameInput.value.trim()) missing.push("Name");
   if (!salespersonInput.value.trim()) missing.push("Salesperson");
   if (!getDueDateValue().trim()) missing.push("Due Date");
   return missing;
