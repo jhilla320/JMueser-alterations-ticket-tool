@@ -469,6 +469,7 @@ button:hover {
   min-height: 6in;
   padding: 0.22in;
   background: #fffdfa;
+  font-size: 1.1rem;
   line-height: 1.55;
   overflow: visible;
 }
@@ -488,7 +489,7 @@ button:hover {
 }
 
 .output .doc-title {
-  font-size: 1.2rem;
+  font-size: 1.32rem;
   margin: 0 0 0.7rem;
   color: #3d352c;
 }
@@ -496,7 +497,7 @@ button:hover {
 .output .meta {
   margin: 0.2in 0 0.9rem;
   color: #6c645d;
-  font-size: 0.73rem;
+  font-size: 0.8rem;
 }
 
 .output .rush-flag {
@@ -593,28 +594,28 @@ button:hover {
     border-radius: 0;
     padding: 0;
     background: white;
-    font-size: calc(10pt * var(--print-scale, 1));
-    line-height: calc(1.25 * var(--print-scale, 1));
+    font-size: 11pt;
+    line-height: 1.25;
   }
 
   .output .doc-title {
-    font-size: calc(12pt * var(--print-scale, 1));
-    margin: 0 0 calc(0.06in * var(--print-scale, 1));
+    font-size: 13.2pt;
+    margin: 0 0 0.06in;
   }
 
   .output p {
-    margin: calc(0.03in * var(--print-scale, 1)) 0;
+    margin: 0.03in 0;
   }
 
   .output .garment-output-block {
-    margin-top: calc(0.08in * var(--print-scale, 1));
-    padding-top: calc(0.06in * var(--print-scale, 1));
+    margin-top: 0.08in;
+    padding-top: 0.06in;
     border-top: 1px solid #c8c0b4;
     break-inside: avoid;
   }
 
   .output .meta {
-    margin: calc(0.08in * var(--print-scale, 1)) 0 0;
-    font-size: calc(6pt * var(--print-scale, 1));
+    margin: 0.08in 0 0;
+    font-size: 6.6pt;
   }
 }

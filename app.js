@@ -35,9 +35,6 @@ const GOOGLE_CLIENT_ID = "617892178220-84fg83gdjhjssb3et6e5ufjnkb8cn1v2.apps.goo
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
-const MIN_PRINT_SCALE = 0.9;
-const PRINT_HEIGHT_IN = 5.8;
-const CSS_PX_PER_IN = 96;
 
 let jackets = [];
 let trousers = [];
@@ -414,35 +411,6 @@ function setActiveTab(tabName, shouldPersist = true) {
   }
 }
 
-function resetPrintScale() {
-  printArea.style.removeProperty("--print-scale");
-}
-
-function getPrintScale() {
-  const contentHeight = printArea.scrollHeight;
-  if (!contentHeight) {
-    return 1;
-  }
-
-  const targetHeight = PRINT_HEIGHT_IN * CSS_PX_PER_IN;
-  if (contentHeight <= targetHeight) {
-    return 1;
-  }
-
-  const scale = targetHeight / contentHeight;
-  return Math.min(1, Math.max(MIN_PRINT_SCALE, scale));
-}
-
-function applyPrintScale() {
-  resetPrintScale();
-  const scale = getPrintScale();
-  if (scale >= 1) {
-    return scale;
-  }
-
-  printArea.style.setProperty("--print-scale", scale.toFixed(3));
-  return scale;
-}
 
 let driveTokenClient = null;
 
@@ -931,7 +899,6 @@ function saveToLocalFile() {
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
   const filename = `${safeName}_${datePart}.doc`;
   renderOutput();
-  resetPrintScale();
 
   const content = buildExportHtml();
   const blob = new Blob([content], { type: "application/msword;charset=utf-8" });
@@ -1204,11 +1171,8 @@ printBtn.addEventListener("click", () => {
 
   renderOutput();
   saveToStorage();
-  applyPrintScale();
   window.print();
 });
-
-window.addEventListener("afterprint", resetPrintScale);
 
 driveAuthBtn.addEventListener("click", () => {
   if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "REPLACE_WITH_CLIENT_ID") {
