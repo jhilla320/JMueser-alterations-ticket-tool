@@ -20,7 +20,6 @@ const addShirtBtn = document.getElementById("addShirtBtn");
 
 const printArea = document.getElementById("printArea");
 const saveStatus = document.getElementById("saveStatus");
-const saveBtn = document.getElementById("saveBtn");
 const driveAuthBtn = document.getElementById("driveAuthBtn");
 const driveSaveBtn = document.getElementById("driveSaveBtn");
 const printBtn = document.getElementById("printBtn");
@@ -304,7 +303,7 @@ function renderTrouserMeasurements(item, idx) {
         <label for="trouser-cuff-${idx}">Cuff Style</label>
         <div class="stepper">
           <select id="trouser-cuff-${idx}" class="button-select" data-type="trouser" data-index="${idx}" data-field="trouserCuff">
-            ${buildOptions(["No Cuff", "1 3/4\"Cuff", "2\"Cuff"], item?.trouserCuff || "")}
+            ${buildOptions(["No Cuff", "1 3/4\" Cuff", "2\" Cuff"], item?.trouserCuff || "")}
           </select>
         </div>
       </div>
@@ -790,8 +789,9 @@ function renderOutput() {
           measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)}"</p>`);
         }
         if ((entry.trouserCuff || "").trim()) {
-          const cuffLabel = entry.trouserCuff.replace(/\s*"\s*/g, "\"").replace(/\bin\b/g, "\"");
-          measurements.push(`<p><strong>Cuff Style:</strong> ${escapeHtml(cuffLabel)}</p>`);
+          const cuffLabel = entry.trouserCuff.replace(/\s*"\s*/g, "\" ").replace(/\bin\b/g, "\"");
+          const cuffLabelHtml = escapeHtml(cuffLabel).replace(/&quot;/g, "\"");
+          measurements.push(`<p><strong>Cuff Style:</strong> ${cuffLabelHtml}</p>`);
         }
 
         const outputPieces = [];
@@ -860,9 +860,9 @@ function renderOutput() {
 
   printArea.innerHTML = `
     ${rushFlag ? '<p class="rush-flag">**RUSH**</p>' : ""}
-    <p><strong>Customer Name:</strong> ${escapeHtml(customerName)}</p>
+    <p><strong>Client Name:</strong> ${escapeHtml(customerName)}</p>
     <p><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
-    <p><strong>Salesperson Name:</strong> ${escapeHtml(salesperson)}</p>
+    <p><strong>Salesperson:</strong> ${escapeHtml(salesperson)}</p>
     <p><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
     ${balanceDue ? `<p><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
     ${garmentSections.join("")}
@@ -1128,8 +1128,8 @@ function onInputChange() {
 
 function validateBeforePrint() {
   const missing = [];
-  if (!customerNameInput.value.trim()) missing.push("Customer Name");
-  if (!salespersonInput.value.trim()) missing.push("Salesperson Name");
+  if (!customerNameInput.value.trim()) missing.push("Client Name");
+  if (!salespersonInput.value.trim()) missing.push("Salesperson");
   if (!getDueDateValue().trim()) missing.push("Due Date");
   return missing;
 }
@@ -1236,15 +1236,6 @@ driveSaveBtn.addEventListener("click", async () => {
   }
 });
 
-saveBtn.addEventListener("click", () => {
-  const missing = validateBeforePrint();
-  if (missing.length) {
-    alert(`Please complete these required fields before saving:\n- ${missing.join("\n- ")}`);
-    return;
-  }
-
-  saveToLocalFile();
-});
 
 clearBtn.addEventListener("click", clearAllFields);
 
