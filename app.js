@@ -1212,29 +1212,30 @@ driveAuthBtn.addEventListener("click", () => {
 });
 
 driveSaveBtn.addEventListener("click", async () => {
-  saveStatus.textContent = "Drive save clicked";
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  const missing = validateBeforePrint();
-  if (missing.length) {
-    alert(`Please complete these required fields before saving:\n- ${missing.join("\n- ")}`);
-    return;
-  }
-
-  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "REPLACE_WITH_CLIENT_ID") {
-    alert("Set your Google Client ID in app.js before connecting Drive.");
-    return;
-  }
-
-  const state = buildState();
-  renderOutput();
-  resetPrintScale();
-
-  const safeName = formatFileBaseName(state.customerName).slice(0, 40);
-  const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-  const filename = `${safeName}_${datePart}.doc`;
-
   try {
+    saveStatus.textContent = "Drive save clicked";
+    await new Promise((resolve) => setTimeout(resolve, 0));
     saveStatus.textContent = "Preparing Drive auth...";
+
+    const missing = validateBeforePrint();
+    if (missing.length) {
+      alert(`Please complete these required fields before saving:\n- ${missing.join("\n- ")}`);
+      return;
+    }
+
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === "REPLACE_WITH_CLIENT_ID") {
+      alert("Set your Google Client ID in app.js before connecting Drive.");
+      return;
+    }
+
+    const state = buildState();
+    renderOutput();
+    resetPrintScale();
+
+    const safeName = formatFileBaseName(state.customerName).slice(0, 40);
+    const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
+    const filename = `${safeName}_${datePart}.doc`;
+
     const token = await getValidDriveToken();
     saveStatus.textContent = "Uploading to Drive...";
     const { body, boundary } = buildDriveMultipart({
@@ -1255,15 +1256,15 @@ driveSaveBtn.addEventListener("click", async () => {
     if (!response.ok) {
       if (response.status === 401) {
         clearDriveToken();
-        alert("Drive session expired. Click Save to Drive again.");
+        alert("Drive session expired. Click Save to Google again.");
         return;
       }
       throw new Error("Upload failed");
     }
 
-    saveStatus.textContent = "Drive upload complete";
     saveStatus.textContent = `Saved to Drive: ${filename}`;
   } catch (err) {
+    saveStatus.textContent = `Drive error: ${err.message}`;
     alert(`Drive upload failed: ${err.message}`);
   }
 });
