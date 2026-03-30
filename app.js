@@ -719,19 +719,19 @@ function renderOutput() {
       ...jacketFilled.map((entry, idx) => {
         const measurements = [];
         if (Number(entry.halfBack)) {
-          measurements.push(`<p><strong>1/2 Back:</strong> ${formatSignedQuarter(entry.halfBack)} in</p>`);
+          measurements.push(`<p><strong>1/2 Back:</strong> ${formatSignedQuarter(entry.halfBack)}"</p>`);
         }
         if (Number(entry.halfWaist)) {
-          measurements.push(`<p><strong>1/2 Waist:</strong> ${formatSignedQuarter(entry.halfWaist)} in</p>`);
+          measurements.push(`<p><strong>1/2 Waist:</strong> ${formatSignedQuarter(entry.halfWaist)}"</p>`);
         }
         if (Number(entry.shortenBody)) {
-          measurements.push(`<p><strong>Shorten Body:</strong> ${formatSignedQuarter(entry.shortenBody)} in</p>`);
+          measurements.push(`<p><strong>Shorten Body:</strong> ${formatSignedQuarter(entry.shortenBody)}"</p>`);
         }
         if (Number(entry.sleeves)) {
-          measurements.push(`<p><strong>Sleeves:</strong> ${formatSignedQuarter(entry.sleeves)} in</p>`);
+          measurements.push(`<p><strong>Sleeves:</strong> ${formatSignedQuarter(entry.sleeves)}"</p>`);
         }
         if (Number(entry.tightenCollar)) {
-          measurements.push(`<p><strong>Tighten Collar:</strong> ${formatSignedQuarter(entry.tightenCollar)} in</p>`);
+          measurements.push(`<p><strong>Tighten Collar:</strong> ${formatSignedQuarter(entry.tightenCollar)}"</p>`);
         }
         if ((entry.buttons || "").trim()) {
           measurements.push(`<p><strong>Buttons:</strong> ${escapeHtml(entry.buttons)}</p>`);
@@ -769,28 +769,29 @@ function renderOutput() {
         const notes = formatMultiline(entry.adjustments);
         const measurements = [];
         if (Number(entry.trouserWaist)) {
-          measurements.push(`<p><strong>Waist:</strong> ${formatSignedQuarter(entry.trouserWaist)} in</p>`);
+          measurements.push(`<p><strong>Waist:</strong> ${formatSignedQuarter(entry.trouserWaist)}"</p>`);
         }
         if (Number(entry.trouserSeat)) {
-          measurements.push(`<p><strong>Seat:</strong> ${formatSignedQuarter(entry.trouserSeat)} in</p>`);
+          measurements.push(`<p><strong>Seat:</strong> ${formatSignedQuarter(entry.trouserSeat)}"</p>`);
         }
         if (Number(entry.trouserThigh)) {
-          measurements.push(`<p><strong>Thigh:</strong> ${formatSignedQuarter(entry.trouserThigh)} in</p>`);
+          measurements.push(`<p><strong>Thigh:</strong> ${formatSignedQuarter(entry.trouserThigh)}"</p>`);
         }
         if (Number(entry.trouserKnee)) {
-          measurements.push(`<p><strong>Knee:</strong> ${formatSignedQuarter(entry.trouserKnee)} in</p>`);
+          measurements.push(`<p><strong>Knee:</strong> ${formatSignedQuarter(entry.trouserKnee)}"</p>`);
         }
         if (Number(entry.trouserLegOpening)) {
-          measurements.push(`<p><strong>Leg Opening:</strong> ${formatSignedQuarter(entry.trouserLegOpening)} in</p>`);
+          measurements.push(`<p><strong>Leg Opening:</strong> ${formatSignedQuarter(entry.trouserLegOpening)}"</p>`);
         }
         if (Number(entry.trouserInseam)) {
-          measurements.push(`<p><strong>Inseam:</strong> ${formatSignedQuarter(entry.trouserInseam)} in</p>`);
+          measurements.push(`<p><strong>Inseam:</strong> ${formatSignedQuarter(entry.trouserInseam)}"</p>`);
         }
         if ((entry.trouserTotalLength || "").trim()) {
-          measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)} in</p>`);
+          measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)}"</p>`);
         }
         if ((entry.trouserCuff || "").trim()) {
-          measurements.push(`<p><strong>Cuff Style:</strong> ${escapeHtml(entry.trouserCuff)}</p>`);
+          const cuffLabel = entry.trouserCuff.replace(/\bin\b/g, "\"");
+          measurements.push(`<p><strong>Cuff Style:</strong> ${escapeHtml(cuffLabel)}</p>`);
         }
 
         const outputPieces = [];
@@ -825,10 +826,10 @@ function renderOutput() {
         const notes = formatMultiline(entry.adjustments);
         const measurements = [];
         if (Number(entry.shirtSleeve)) {
-          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(entry.shirtSleeve)} in</p>`);
+          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(entry.shirtSleeve)}"</p>`);
         }
         if (Number(entry.shirtBody)) {
-          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(entry.shirtBody)} in</p>`);
+          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(entry.shirtBody)}"</p>`);
         }
 
         const outputPieces = [];
