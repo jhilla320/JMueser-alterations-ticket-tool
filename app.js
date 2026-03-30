@@ -303,7 +303,14 @@ function renderTrouserMeasurements(item, idx) {
         <label for="trouser-cuff-${idx}">Cuff Style</label>
         <div class="stepper">
           <select id="trouser-cuff-${idx}" class="button-select" data-type="trouser" data-index="${idx}" data-field="trouserCuff">
-            ${buildOptions(["No Cuff", "1 3/4\" Cuff", "2\" Cuff"], item?.trouserCuff || "")}
+            ${buildOptionsFromPairs(
+              [
+                { value: "No Cuff", label: "No Cuff" },
+                { value: "1 3/4 in Cuff", label: "1 3/4\" Cuff" },
+                { value: "2 in Cuff", label: "2\" Cuff" },
+              ],
+              item?.trouserCuff || "",
+            )}
           </select>
         </div>
       </div>
@@ -534,6 +541,17 @@ function buildOptions(options, selectedValue) {
     .map((value) => {
       const selected = selectedValue === value ? " selected" : "";
       const label = value === "custom" ? "Custom" : value;
+      return `<option value="${value}"${selected}>${label}</option>`;
+    })
+    .join("");
+  return `${base}${values}`;
+}
+
+function buildOptionsFromPairs(options, selectedValue) {
+  const base = '<option value="">Select</option>';
+  const values = options
+    .map(({ value, label }) => {
+      const selected = selectedValue === value ? " selected" : "";
       return `<option value="${value}"${selected}>${label}</option>`;
     })
     .join("");
@@ -789,8 +807,14 @@ function renderOutput() {
           measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)}"</p>`);
         }
         if ((entry.trouserCuff || "").trim()) {
-          const cuffLabel = entry.trouserCuff.replace(/\s*"\s*/g, "\" ").replace(/\bin\b/g, "\"");
-          const cuffLabelHtml = escapeHtml(cuffLabel).replace(/&quot;/g, "\"");
+          const cuffLabel = entry.trouserCuff
+            .replace(/\bin\b/g, "\"")
+            .replace(/\s*Cuff\b/i, "")
+            .replace(/\s*"\s*/g, "\"")
+            .replace(/\s+"/g, "\"")
+            .replace(/"\s+/g, "\"")
+            .trim();
+          const cuffLabelHtml = escapeHtml(cuffLabel).replace(/&quot;/g, "&#34;");
           measurements.push(`<p><strong>Cuff Style:</strong> ${cuffLabelHtml}</p>`);
         }
 
