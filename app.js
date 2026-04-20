@@ -909,6 +909,7 @@ function renderOutput() {
   }
 
   printArea.innerHTML = `
+    <p class="doc-title"><strong>J. Mueser Alterations Ticket</strong></p>
     ${rushFlag ? '<p class="rush-flag">**RUSH**</p>' : ""}
     <p class="client-name"><strong>Name:</strong> ${escapeHtml(customerName)}</p>
     <p><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
@@ -987,14 +988,14 @@ function buildExportHtml() {
         box-sizing: border-box;
         padding: 0;
         margin: 0;
-        font-size: 10pt;
+        font-size: 12pt;
         line-height: 1.25;
       }
       .output p { margin: 0.08in 0; }
-      .output .doc-title { font-size: 12pt; margin: 0 0 0.12in; color: #3d352c; }
+      .output .doc-title { font-size: 16pt; margin: 0 0 0.12in; color: #3d352c; }
       .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; }
-      .output .meta { margin: 0.16in 0 0; color: #6c645d; font-size: 7pt; }
-      .output .client-name { font-size: 12pt; }
+      .output .meta { margin: 0.16in 0 0; color: #6c645d; font-size: 9pt; }
+      .output .client-name { font-size: 14pt; }
       .output .garment-output-block {
         margin-top: 0.16in;
         padding-top: 0.12in;
@@ -1053,27 +1054,32 @@ function buildDocxDocumentXml() {
   Array.from(printArea.children).forEach((child) => {
     if (child.matches?.(".garment-output-block")) {
       Array.from(child.children).forEach((paragraph, index) => {
-        bodyParts.push(paragraphXml(paragraph, { before: index === 0 ? 180 : 0, after: 120, border: index === 0 }));
+        bodyParts.push(paragraphXml(paragraph, { fontSize: 24, before: index === 0 ? 180 : 0, after: 120, border: index === 0 }));
       });
       return;
     }
 
+    if (child.matches?.(".doc-title")) {
+      bodyParts.push(paragraphXml(child, { fontSize: 32, after: 240 }));
+      return;
+    }
+
     if (child.matches?.(".client-name")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 24, after: 120 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 28, after: 120 }));
       return;
     }
 
     if (child.matches?.(".meta")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 14, before: 240, after: 0 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 18, before: 240, after: 0 }));
       return;
     }
 
     if (child.matches?.(".rush-flag")) {
-      bodyParts.push(paragraphXml(child, { color: "B42318", after: 160 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 24, color: "B42318", after: 160 }));
       return;
     }
 
-    bodyParts.push(paragraphXml(child, { after: 120 }));
+    bodyParts.push(paragraphXml(child, { fontSize: 24, after: 120 }));
   });
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

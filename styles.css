@@ -469,7 +469,7 @@ button:hover {
   min-height: 11in;
   padding: 0.22in;
   background: #fffdfa;
-  font-size: 1rem;
+  font-size: 12pt;
   line-height: 1.45;
   overflow: visible;
 }
@@ -489,7 +489,7 @@ button:hover {
 }
 
 .output .doc-title {
-  font-size: 1.32rem;
+  font-size: 16pt;
   margin: 0 0 0.7rem;
   color: #3d352c;
 }
@@ -497,11 +497,11 @@ button:hover {
 .output .meta {
   margin: 0.2in 0 0.9rem;
   color: #6c645d;
-  font-size: 0.8rem;
+  font-size: 9pt;
 }
 
 .output .client-name {
-  font-size: 1.2rem;
+  font-size: 14pt;
 }
 
 .output .rush-flag {
@@ -599,13 +599,13 @@ button:hover {
     border-radius: 0;
     padding: 0;
     background: white;
-    font-size: 10pt;
+    font-size: 12pt;
     line-height: 1.25;
     page-break-after: avoid;
   }
 
   .output .doc-title {
-    font-size: 13.2pt;
+    font-size: 16pt;
     margin: 0 0 0.06in;
   }
 
@@ -622,10 +622,10 @@ button:hover {
 
   .output .meta {
     margin: 0.16in 0 0;
-    font-size: 7pt;
+    font-size: 9pt;
   }
 
   .output .client-name {
-    font-size: 12pt;
+    font-size: 14pt;
   }
 }
