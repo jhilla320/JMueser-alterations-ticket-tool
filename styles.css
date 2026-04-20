@@ -513,7 +513,6 @@ button:hover {
 .output .rush-flag {
   color: #b42318;
   font-weight: 800;
-  text-align: center;
 }
 
 @media (max-width: 680px) {

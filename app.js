@@ -915,8 +915,8 @@ function renderOutput() {
     <p class="ticket-detail"><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
     <p class="ticket-detail"><strong>Salesperson:</strong> ${escapeHtml(salesperson)}</p>
     <p class="ticket-detail"><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
+    ${balanceDue ? `<p class="ticket-detail"><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
     <p class="meta"><strong>Ticket Created on:</strong> ${escapeHtml(now.toLocaleString())}</p>
-    ${balanceDue ? `<p><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
     ${garmentSections.join("")}
   `;
 }
@@ -995,7 +995,7 @@ function buildExportHtml() {
       }
       .output p { margin: 0.08in 0; }
       .output .doc-title { font-size: 16pt; margin: 0 0 0.12in; color: #3d352c; }
-      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; text-align: center; }
+      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; }
       .output .meta { margin: 0.08in 0; color: #6c645d; font-size: 9pt; }
       .output .client-name { font-size: 14pt; }
       .output .ticket-detail { font-size: 14pt; }
@@ -1084,7 +1084,7 @@ function buildDocxDocumentXml() {
     }
 
     if (child.matches?.(".rush-flag")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 24, color: "B42318", align: "center", after: 160 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 24, color: "B42318", after: 160 }));
       return;
     }
 
