@@ -109,7 +109,8 @@ function hasGarmentData(item) {
 function formatSignedQuarter(value) {
   const numeric = Number(value) || 0;
   if (numeric === 0) return "0";
-  return `${numeric > 0 ? "+" : ""}${numeric}`;
+  const formatted = Number.isInteger(numeric) ? `${numeric}` : numeric.toFixed(1);
+  return `${numeric > 0 ? "+" : ""}${formatted}`;
 }
 
 function formatFileBaseName(name) {
@@ -721,7 +722,7 @@ function handleDynamicClick(event) {
     }
 
     const current = Number(items[idx][field]) || 0;
-    items[idx][field] = current + dir;
+    items[idx][field] = Math.round((current + dir * 0.5) * 2) / 2;
     renderItemList(type);
     onInputChange();
     return;
