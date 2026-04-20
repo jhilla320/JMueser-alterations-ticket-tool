@@ -152,6 +152,10 @@ function normalizeTrouserCuff(value) {
   return cuff;
 }
 
+function formatSizeDisplay(value) {
+  return value === "custom" ? "Custom" : value;
+}
+
 function renderJacketMeasurements(item, idx) {
   const formatValue = (field) => formatSignedQuarter(item?.[field] || 0);
   return `
@@ -791,7 +795,7 @@ function renderOutput() {
         const notes = formatMultiline(entry.adjustments);
         const outputPieces = [];
         const jacketLabel = idx === 0 ? "Jacket" : `Jacket ${idx + 1}`;
-        const sizeDesc = [entry.size, entry.description].filter((value) => (value || "").trim());
+        const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
         if (sizeDesc.length) {
           outputPieces.push(`<p><strong>${jacketLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
         }
@@ -847,7 +851,7 @@ function renderOutput() {
 
         const outputPieces = [];
         const trouserLabel = idx === 0 ? "Trouser" : `Trouser ${idx + 1}`;
-        const sizeDesc = [entry.size, entry.description].filter((value) => (value || "").trim());
+        const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
         if (sizeDesc.length) {
           outputPieces.push(`<p><strong>${trouserLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
         }
@@ -885,7 +889,7 @@ function renderOutput() {
 
         const outputPieces = [];
         const shirtLabel = idx === 0 ? "Shirt" : `Shirt ${idx + 1}`;
-        const sizeDesc = [entry.size, entry.description].filter((value) => (value || "").trim());
+        const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
         if (sizeDesc.length) {
           outputPieces.push(`<p><strong>${shirtLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
         }
@@ -991,15 +995,15 @@ function buildExportHtml() {
         margin: 0;
         display: flex;
         flex-direction: column;
-        font-size: 12pt;
+        font-size: 11pt;
         line-height: 1.35;
       }
       .output p { margin: 0.08in 0; }
       .output .doc-title { font-size: 16pt; margin: 0 0 0.12in; color: #3d352c; }
       .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; }
       .output .meta { margin: 0.064in 0; color: #6c645d; font-size: 9pt; }
-      .output .client-name { margin: 0.064in 0; font-size: 12pt; }
-      .output .ticket-detail { margin: 0.064in 0; font-size: 12pt; }
+      .output .client-name { margin: 0.064in 0; font-size: 11pt; }
+      .output .ticket-detail { margin: 0.064in 0; font-size: 11pt; }
       .output .garment-output-block {
         margin-top: 0.16in;
         padding-top: 0.12in;
@@ -1059,7 +1063,7 @@ function buildDocxDocumentXml() {
   Array.from(printArea.children).forEach((child) => {
     if (child.matches?.(".garment-output-block")) {
       Array.from(child.children).forEach((paragraph, index) => {
-        bodyParts.push(paragraphXml(paragraph, { fontSize: 24, before: index === 0 ? 180 : 0, after: 120, border: index === 0 }));
+        bodyParts.push(paragraphXml(paragraph, { fontSize: 22, before: index === 0 ? 180 : 0, after: 120, border: index === 0 }));
       });
       return;
     }
@@ -1070,12 +1074,12 @@ function buildDocxDocumentXml() {
     }
 
     if (child.matches?.(".client-name")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 24, after: 96 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 22, after: 96 }));
       return;
     }
 
     if (child.matches?.(".ticket-detail")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 24, after: 96 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 22, after: 96 }));
       return;
     }
 
@@ -1089,7 +1093,7 @@ function buildDocxDocumentXml() {
       return;
     }
 
-    bodyParts.push(paragraphXml(child, { fontSize: 24, after: 120 }));
+    bodyParts.push(paragraphXml(child, { fontSize: 22, after: 120 }));
   });
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
