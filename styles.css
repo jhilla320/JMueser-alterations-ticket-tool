@@ -465,22 +465,22 @@ button:hover {
   margin-top: 0.8rem;
   border: 1px dashed #c5b6a3;
   border-radius: 10px;
-  width: min(100%, 4in);
-  min-height: 6in;
+  width: min(100%, 8.5in);
+  min-height: 11in;
   padding: 0.22in;
   background: #fffdfa;
-  font-size: 1.1rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.45;
   overflow: visible;
 }
 
 .output p {
-  margin: 0.35rem 0;
+  margin: 0.42rem 0;
 }
 
 .output .garment-output-block {
-  margin-top: 0.95rem;
-  padding-top: 0.7rem;
+  margin-top: 1.1rem;
+  padding-top: 0.8rem;
   border-top: 1px solid #ded5c8;
 }
 
@@ -557,8 +557,8 @@ button:hover {
 
 @media print {
   @page {
-    size: 4in 6in;
-    margin: 0.1in;
+    size: letter;
+    margin: 0.5in;
   }
 
   body {
@@ -590,7 +590,7 @@ button:hover {
   }
 
   .output {
-    width: 3.8in;
+    width: 7.5in;
     min-height: auto;
     height: auto;
     max-width: none;
@@ -610,18 +610,18 @@ button:hover {
   }
 
   .output p {
-    margin: 0.03in 0;
+    margin: 0.08in 0;
   }
 
   .output .garment-output-block {
-    margin-top: 0.08in;
-    padding-top: 0.06in;
+    margin-top: 0.16in;
+    padding-top: 0.12in;
     border-top: 1px solid #c8c0b4;
     break-inside: avoid;
   }
 
   .output .meta {
-    margin: 0.08in 0 0;
+    margin: 0.16in 0 0;
     font-size: 7pt;
   }
 

@@ -925,11 +925,11 @@ function saveToLocalFile() {
   const state = buildState();
   const safeName = formatFileBaseName(state.customerName).slice(0, 40);
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-  const filename = `${safeName}_${datePart}.doc`;
+  const filename = `${safeName}_${datePart}.docx`;
   renderOutput();
 
   const content = buildExportHtml();
-  const blob = new Blob([content], { type: "application/msword;charset=utf-8" });
+  const blob = new Blob([content], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -951,7 +951,7 @@ function buildExportHtml() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alterations Ticket</title>
     <style>
-      @page { size: 4in 6in; margin: 0.1in; }
+      @page { size: letter; margin: 0.5in; }
       body {
         margin: 0;
         padding: 0;
@@ -960,21 +960,22 @@ function buildExportHtml() {
         color: #1e1d1a;
       }
       .output {
-        width: 3.8in;
-        min-height: 5.8in;
+        width: 7.5in;
+        min-height: 10in;
         box-sizing: border-box;
         padding: 0;
         margin: 0;
         font-size: 10pt;
         line-height: 1.25;
       }
-      .output p { margin: 0.03in 0; }
-      .output .doc-title { font-size: 12pt; margin: 0 0 0.06in; color: #3d352c; }
-      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.08in; }
-      .output .meta { margin: 0.08in 0 0; color: #6c645d; font-size: 6pt; }
+      .output p { margin: 0.08in 0; }
+      .output .doc-title { font-size: 12pt; margin: 0 0 0.12in; color: #3d352c; }
+      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; }
+      .output .meta { margin: 0.16in 0 0; color: #6c645d; font-size: 7pt; }
+      .output .client-name { font-size: 12pt; }
       .output .garment-output-block {
-        margin-top: 0.08in;
-        padding-top: 0.06in;
+        margin-top: 0.16in;
+        padding-top: 0.12in;
         border-top: 1px solid #c8c0b4;
         break-inside: avoid;
       }
@@ -1239,14 +1240,14 @@ driveSaveBtn.addEventListener("click", async () => {
 
     const safeName = formatFileBaseName(state.customerName).slice(0, 40);
     const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-    const filename = `${safeName}_${datePart}.doc`;
+  const filename = `${safeName}_${datePart}.docx`;
 
     const token = await getValidDriveToken();
     saveStatus.textContent = "Uploading to Drive...";
     const { body, boundary } = buildDriveMultipart({
       filename,
       content: buildExportHtml(),
-      mimeType: "application/msword",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       folderId: DRIVE_FOLDER_ID,
     });
 
