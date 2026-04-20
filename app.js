@@ -910,14 +910,14 @@ function renderOutput() {
 
   printArea.innerHTML = `
     <p class="doc-title"><strong>J. Mueser Alterations Ticket</strong></p>
-    ${rushFlag ? '<p class="rush-flag">**RUSH**</p>' : ""}
+    ${rushFlag ? '<p class="rush-flag">*** RUSH ***</p>' : ""}
     <p class="client-name"><strong>Name:</strong> ${escapeHtml(customerName)}</p>
-    <p><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
-    <p><strong>Salesperson:</strong> ${escapeHtml(salesperson)}</p>
-    <p><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
+    <p class="ticket-detail"><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
+    <p class="ticket-detail"><strong>Salesperson:</strong> ${escapeHtml(salesperson)}</p>
+    <p class="ticket-detail"><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
+    <p class="meta"><strong>Ticket Created on:</strong> ${escapeHtml(now.toLocaleString())}</p>
     ${balanceDue ? `<p><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
     ${garmentSections.join("")}
-    <p class="meta">Generated: ${escapeHtml(now.toLocaleString())}</p>
   `;
 }
 
@@ -988,14 +988,17 @@ function buildExportHtml() {
         box-sizing: border-box;
         padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
         font-size: 12pt;
-        line-height: 1.25;
+        line-height: 1.35;
       }
       .output p { margin: 0.08in 0; }
       .output .doc-title { font-size: 16pt; margin: 0 0 0.12in; color: #3d352c; }
-      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; }
-      .output .meta { margin: 0.16in 0 0; color: #6c645d; font-size: 9pt; }
+      .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; text-align: center; }
+      .output .meta { margin: 0.08in 0; color: #6c645d; font-size: 9pt; }
       .output .client-name { font-size: 14pt; }
+      .output .ticket-detail { font-size: 14pt; }
       .output .garment-output-block {
         margin-top: 0.16in;
         padding-top: 0.12in;
@@ -1041,10 +1044,11 @@ function runXmlFromNode(node, inherited = {}) {
 function paragraphXml(element, options = {}) {
   const spacingBefore = options.before ?? 0;
   const spacingAfter = options.after ?? 120;
+  const justification = options.align ? `<w:jc w:val="${options.align}"/>` : "";
   const border = options.border
     ? '<w:pBdr><w:top w:val="single" w:sz="4" w:space="1" w:color="C8C0B4"/></w:pBdr>'
     : "";
-  const paragraphProps = `<w:pPr><w:spacing w:before="${spacingBefore}" w:after="${spacingAfter}" w:line="276" w:lineRule="auto"/>${border}</w:pPr>`;
+  const paragraphProps = `<w:pPr><w:spacing w:before="${spacingBefore}" w:after="${spacingAfter}" w:line="324" w:lineRule="auto"/>${justification}${border}</w:pPr>`;
   const runOptions = { fontSize: options.fontSize, color: options.color };
   return `<w:p>${paragraphProps}${Array.from(element.childNodes).map((child) => runXmlFromNode(child, runOptions)).join("")}</w:p>`;
 }
@@ -1069,13 +1073,18 @@ function buildDocxDocumentXml() {
       return;
     }
 
+    if (child.matches?.(".ticket-detail")) {
+      bodyParts.push(paragraphXml(child, { fontSize: 28, after: 120 }));
+      return;
+    }
+
     if (child.matches?.(".meta")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 18, before: 240, after: 0 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 18, after: 120 }));
       return;
     }
 
     if (child.matches?.(".rush-flag")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 24, color: "B42318", after: 160 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 24, color: "B42318", align: "center", after: 160 }));
       return;
     }
 
