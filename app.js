@@ -158,8 +158,12 @@ function formatSizeDisplay(value) {
   return value === "custom" ? "Custom" : value;
 }
 
-function normalizeTightenCollarValue(value) {
+function normalizeNegativeOnlyValue(value) {
   return Math.min(0, Number(value) || 0);
+}
+
+function isNegativeOnlyField(field) {
+  return ["tightenCollar", "shirtSleeve", "shirtBody"].includes(field);
 }
 
 function renderJacketMeasurements(item, idx) {
@@ -273,7 +277,7 @@ function renderJacketMeasurements(item, idx) {
             data-index="${idx}"
             data-field="tightenCollar"
             data-dir="1"
-            ${normalizeTightenCollarValue(item?.tightenCollar) >= 0 ? "disabled" : ""}
+            ${normalizeNegativeOnlyValue(item?.tightenCollar) >= 0 ? "disabled" : ""}
           >+</button>
         </div>
       </div>
@@ -375,7 +379,16 @@ function renderShirtMeasurements(item, idx) {
         <div class="stepper" id="shirt-sleeve-${idx}">
           <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtSleeve" data-dir="-1">-</button>
           <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("shirtSleeve")}" data-action="clear-value" data-type="shirt" data-index="${idx}" data-field="shirtSleeve" />
-          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtSleeve" data-dir="1">+</button>
+          <button
+            type="button"
+            class="stepper-btn"
+            data-action="step"
+            data-type="shirt"
+            data-index="${idx}"
+            data-field="shirtSleeve"
+            data-dir="1"
+            ${normalizeNegativeOnlyValue(item?.shirtSleeve) >= 0 ? "disabled" : ""}
+          >+</button>
         </div>
       </div>
       <div class="measurement-row">
@@ -383,7 +396,16 @@ function renderShirtMeasurements(item, idx) {
         <div class="stepper" id="shirt-body-${idx}">
           <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtBody" data-dir="-1">-</button>
           <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("shirtBody")}" data-action="clear-value" data-type="shirt" data-index="${idx}" data-field="shirtBody" />
-          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtBody" data-dir="1">+</button>
+          <button
+            type="button"
+            class="stepper-btn"
+            data-action="step"
+            data-type="shirt"
+            data-index="${idx}"
+            data-field="shirtBody"
+            data-dir="1"
+            ${normalizeNegativeOnlyValue(item?.shirtBody) >= 0 ? "disabled" : ""}
+          >+</button>
         </div>
       </div>
     </div>
@@ -770,7 +792,7 @@ function handleDynamicClick(event) {
 
     const current = Number(items[idx][field]) || 0;
     const next = Math.round((current + dir * 0.5) * 2) / 2;
-    items[idx][field] = field === "tightenCollar" ? normalizeTightenCollarValue(next) : next;
+    items[idx][field] = isNegativeOnlyField(field) ? normalizeNegativeOnlyValue(next) : next;
     renderItemList(type);
     onInputChange();
     return;
@@ -833,7 +855,7 @@ function renderOutput() {
         if (Number(entry.sleeveWidth)) {
           measurements.push(`<p><strong>Sleeve Width:</strong> ${formatSignedQuarter(entry.sleeveWidth)} cm</p>`);
         }
-        const tightenCollar = normalizeTightenCollarValue(entry.tightenCollar);
+        const tightenCollar = normalizeNegativeOnlyValue(entry.tightenCollar);
         if (Number(tightenCollar)) {
           measurements.push(`<p><strong>Tighten Collar:</strong> ${formatSignedQuarter(tightenCollar)} cm</p>`);
         }
@@ -929,11 +951,13 @@ function renderOutput() {
       ...shirtFilled.map((entry, idx) => {
         const notes = formatMultiline(entry.adjustments);
         const measurements = [];
-        if (Number(entry.shirtSleeve)) {
-          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(entry.shirtSleeve)} cm</p>`);
+        const shirtSleeve = normalizeNegativeOnlyValue(entry.shirtSleeve);
+        if (Number(shirtSleeve)) {
+          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(shirtSleeve)} cm</p>`);
         }
-        if (Number(entry.shirtBody)) {
-          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(entry.shirtBody)} cm</p>`);
+        const shirtBody = normalizeNegativeOnlyValue(entry.shirtBody);
+        if (Number(shirtBody)) {
+          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(shirtBody)} cm</p>`);
         }
 
         const outputPieces = [];
@@ -1228,7 +1252,7 @@ function loadFromStorage() {
         shortenBody: Number(item?.shortenBody) || 0,
         sleeves: Number(item?.sleeves) || 0,
         sleeveWidth: Number(item?.sleeveWidth) || 0,
-        tightenCollar: normalizeTightenCollarValue(item?.tightenCollar),
+        tightenCollar: normalizeNegativeOnlyValue(item?.tightenCollar),
         buttons: item?.buttons || "",
       }));
       if (!jackets.length) jackets = [createEmptyItem()];
@@ -1243,7 +1267,7 @@ function loadFromStorage() {
           shortenBody: Number(parsed.jacketShortenBody) || 0,
           sleeves: Number(parsed.jacketSleeves) || 0,
           sleeveWidth: Number(parsed.jacketSleeveWidth) || 0,
-          tightenCollar: normalizeTightenCollarValue(parsed.jacketTightenCollar),
+          tightenCollar: normalizeNegativeOnlyValue(parsed.jacketTightenCollar),
           buttons: parsed.jacketButtons || "",
         },
         {
@@ -1255,7 +1279,7 @@ function loadFromStorage() {
           shortenBody: Number(parsed.jacketShortenBody2) || 0,
           sleeves: Number(parsed.jacketSleeves2) || 0,
           sleeveWidth: Number(parsed.jacketSleeveWidth2) || 0,
-          tightenCollar: normalizeTightenCollarValue(parsed.jacketTightenCollar2),
+          tightenCollar: normalizeNegativeOnlyValue(parsed.jacketTightenCollar2),
           buttons: parsed.jacketButtons2 || "",
         },
       );
@@ -1296,8 +1320,8 @@ function loadFromStorage() {
         size: item?.size || "",
         description: item?.description || "",
         adjustments: item?.adjustments || "",
-        shirtSleeve: Number(item?.shirtSleeve) || 0,
-        shirtBody: Number(item?.shirtBody) || 0,
+        shirtSleeve: normalizeNegativeOnlyValue(item?.shirtSleeve),
+        shirtBody: normalizeNegativeOnlyValue(item?.shirtBody),
       }));
       if (!shirts.length) shirts = [createEmptyItem()];
     } else {
