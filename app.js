@@ -31,6 +31,7 @@ const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const DRIVE_TOKEN_KEY = "driveAccessToken";
 const DRIVE_TOKEN_EXP_KEY = "driveAccessTokenExp";
 const GOOGLE_CLIENT_ID = "617892178220-84fg83gdjhjssb3et6e5ufjnkb8cn1v2.apps.googleusercontent.com";
+const DRIVE_FOLDER_ID = "0AATpjcETwsYwUk9PVA";
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
@@ -495,9 +496,9 @@ async function getValidDriveToken() {
   return requestDriveToken("consent");
 }
 
-function buildDriveMultipart({ filename, content, mimeType }) {
+function buildDriveMultipart({ filename, content, mimeType, folderId = "" }) {
   const boundary = `boundary_${Math.random().toString(36).slice(2)}`;
-  const metadata = { name: filename };
+  const metadata = folderId ? { name: filename, parents: [folderId] } : { name: filename };
   const body =
     `--${boundary}\r\n` +
     "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
@@ -1246,9 +1247,10 @@ driveSaveBtn.addEventListener("click", async () => {
       filename,
       content: buildExportHtml(),
       mimeType: "application/msword",
+      folderId: DRIVE_FOLDER_ID,
     });
 
-    const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+    const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1266,7 +1268,7 @@ driveSaveBtn.addEventListener("click", async () => {
       throw new Error("Upload failed");
     }
 
-    saveStatus.textContent = `Saved to Drive: ${filename}`;
+    saveStatus.textContent = DRIVE_FOLDER_ID ? `Saved to Shared Drive: ${filename}` : `Saved to Drive: ${filename}`;
   } catch (err) {
     saveStatus.textContent = `Drive error: ${err.message}`;
     alert(`Drive upload failed: ${err.message}`);
