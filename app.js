@@ -98,7 +98,10 @@ function hasGarmentData(item) {
     "shirtBody",
     "shirtSlimBody",
   ];
-  const hasMeasurements = measurementFields.some((field) => Number(item?.[field]) !== 0);
+  const hasMeasurements = measurementFields.some((field) => {
+    const value = isNegativeOnlyField(field) ? normalizeNegativeOnlyValue(item?.[field]) : Number(item?.[field]) || 0;
+    return value !== 0;
+  });
   return Boolean(
     (item?.size || "").trim() ||
       (item?.description || "").trim() ||
