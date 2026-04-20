@@ -493,10 +493,25 @@ function isRushDueDate(dateValue, generatedAt) {
     return false;
   }
 
-  const due = new Date(`${dateValue}T23:59:59`);
-  const diffMs = due.getTime() - generatedAt.getTime();
-  const fourDaysMs = 4 * 24 * 60 * 60 * 1000;
-  return diffMs >= 0 && diffMs < fourDaysMs;
+  const due = new Date(`${dateValue}T00:00:00`);
+  const current = new Date(generatedAt.getFullYear(), generatedAt.getMonth(), generatedAt.getDate());
+  if (due < current) {
+    return false;
+  }
+
+  let businessDays = 0;
+  const cursor = new Date(current);
+  cursor.setDate(cursor.getDate() + 1);
+
+  while (cursor <= due) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) {
+      businessDays += 1;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return businessDays <= 5;
 }
 
 function getActiveTab() {
