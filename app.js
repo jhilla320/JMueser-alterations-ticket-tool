@@ -160,6 +160,14 @@ function formatSizeDisplay(value) {
   return value === "custom" ? "Custom" : value;
 }
 
+function formatGarmentHeading(label, entry) {
+  const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
+  if (!sizeDesc.length) {
+    return `<p><strong>${label}</strong></p>`;
+  }
+  return `<p><strong>${label}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`;
+}
+
 function normalizeNegativeOnlyValue(value) {
   return Math.min(0, Number(value) || 0);
 }
@@ -885,10 +893,7 @@ function renderOutput() {
         const notes = formatMultiline(entry.adjustments);
         const outputPieces = [];
         const jacketLabel = idx === 0 ? "Jacket" : `Jacket ${idx + 1}`;
-        const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
-        if (sizeDesc.length) {
-          outputPieces.push(`<p><strong>${jacketLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
-        }
+        outputPieces.push(formatGarmentHeading(jacketLabel, entry));
         outputPieces.push(...measurements);
         if (notes) {
           outputPieces.push(
@@ -941,10 +946,7 @@ function renderOutput() {
 
         const outputPieces = [];
         const trouserLabel = idx === 0 ? "Trouser" : `Trouser ${idx + 1}`;
-        const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
-        if (sizeDesc.length) {
-          outputPieces.push(`<p><strong>${trouserLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
-        }
+        outputPieces.push(formatGarmentHeading(trouserLabel, entry));
         outputPieces.push(...measurements);
         if (notes) {
           outputPieces.push(
@@ -985,10 +987,7 @@ function renderOutput() {
 
         const outputPieces = [];
         const shirtLabel = idx === 0 ? "Shirt" : `Shirt ${idx + 1}`;
-        const sizeDesc = [formatSizeDisplay(entry.size), entry.description].filter((value) => (value || "").trim());
-        if (sizeDesc.length) {
-          outputPieces.push(`<p><strong>${shirtLabel}:</strong> ${escapeHtml(sizeDesc.join(", "))}</p>`);
-        }
+        outputPieces.push(formatGarmentHeading(shirtLabel, entry));
         outputPieces.push(...measurements);
         if (notes) {
           outputPieces.push(
