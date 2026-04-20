@@ -497,17 +497,19 @@ button:hover {
 }
 
 .output .meta {
-  margin: 0.42rem 0;
+  margin: 0.336rem 0;
   color: #6c645d;
   font-size: 9pt;
 }
 
 .output .client-name {
-  font-size: 14pt;
+  margin: 0.336rem 0;
+  font-size: 12pt;
 }
 
 .output .ticket-detail {
-  font-size: 14pt;
+  margin: 0.336rem 0;
+  font-size: 12pt;
 }
 
 .output .rush-flag {
@@ -629,15 +631,17 @@ button:hover {
   }
 
   .output .meta {
-    margin: 0.08in 0;
+    margin: 0.064in 0;
     font-size: 9pt;
   }
 
   .output .client-name {
-    font-size: 14pt;
+    margin: 0.064in 0;
+    font-size: 12pt;
   }
 
   .output .ticket-detail {
-    font-size: 14pt;
+    margin: 0.064in 0;
+    font-size: 12pt;
   }
 }

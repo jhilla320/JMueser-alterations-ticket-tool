@@ -996,9 +996,9 @@ function buildExportHtml() {
       .output p { margin: 0.08in 0; }
       .output .doc-title { font-size: 16pt; margin: 0 0 0.12in; color: #3d352c; }
       .output .rush-flag { color: #b42318; font-weight: 800; margin: 0 0 0.12in; }
-      .output .meta { margin: 0.08in 0; color: #6c645d; font-size: 9pt; }
-      .output .client-name { font-size: 14pt; }
-      .output .ticket-detail { font-size: 14pt; }
+      .output .meta { margin: 0.064in 0; color: #6c645d; font-size: 9pt; }
+      .output .client-name { margin: 0.064in 0; font-size: 12pt; }
+      .output .ticket-detail { margin: 0.064in 0; font-size: 12pt; }
       .output .garment-output-block {
         margin-top: 0.16in;
         padding-top: 0.12in;
@@ -1069,17 +1069,17 @@ function buildDocxDocumentXml() {
     }
 
     if (child.matches?.(".client-name")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 28, after: 120 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 24, after: 96 }));
       return;
     }
 
     if (child.matches?.(".ticket-detail")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 28, after: 120 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 24, after: 96 }));
       return;
     }
 
     if (child.matches?.(".meta")) {
-      bodyParts.push(paragraphXml(child, { fontSize: 18, after: 120 }));
+      bodyParts.push(paragraphXml(child, { fontSize: 18, after: 96 }));
       return;
     }
 
