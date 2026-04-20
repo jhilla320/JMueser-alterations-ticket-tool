@@ -76,6 +76,7 @@ function createEmptyItem() {
     trouserCuff: "",
     shirtSleeve: 0,
     shirtBody: 0,
+    shirtSlimBody: 0,
   };
 }
 
@@ -95,6 +96,7 @@ function hasGarmentData(item) {
     "trouserInseam",
     "shirtSleeve",
     "shirtBody",
+    "shirtSlimBody",
   ];
   const hasMeasurements = measurementFields.some((field) => Number(item?.[field]) !== 0);
   return Boolean(
@@ -163,7 +165,7 @@ function normalizeNegativeOnlyValue(value) {
 }
 
 function isNegativeOnlyField(field) {
-  return ["tightenCollar", "shirtSleeve", "shirtBody"].includes(field);
+  return ["tightenCollar", "shirtSleeve", "shirtBody", "shirtSlimBody"].includes(field);
 }
 
 function renderJacketMeasurements(item, idx) {
@@ -405,6 +407,23 @@ function renderShirtMeasurements(item, idx) {
             data-field="shirtBody"
             data-dir="1"
             ${normalizeNegativeOnlyValue(item?.shirtBody) >= 0 ? "disabled" : ""}
+          >+</button>
+        </div>
+      </div>
+      <div class="measurement-row">
+        <label for="shirt-slimBody-${idx}">Slim Body</label>
+        <div class="stepper" id="shirt-slimBody-${idx}">
+          <button type="button" class="stepper-btn" data-action="step" data-type="shirt" data-index="${idx}" data-field="shirtSlimBody" data-dir="-1">-</button>
+          <input class="stepper-value-input" type="text" inputmode="none" value="${formatValue("shirtSlimBody")}" data-action="clear-value" data-type="shirt" data-index="${idx}" data-field="shirtSlimBody" />
+          <button
+            type="button"
+            class="stepper-btn"
+            data-action="step"
+            data-type="shirt"
+            data-index="${idx}"
+            data-field="shirtSlimBody"
+            data-dir="1"
+            ${normalizeNegativeOnlyValue(item?.shirtSlimBody) >= 0 ? "disabled" : ""}
           >+</button>
         </div>
       </div>
@@ -959,6 +978,10 @@ function renderOutput() {
         if (Number(shirtBody)) {
           measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(shirtBody)} cm</p>`);
         }
+        const shirtSlimBody = normalizeNegativeOnlyValue(entry.shirtSlimBody);
+        if (Number(shirtSlimBody)) {
+          measurements.push(`<p><strong>Slim Body:</strong> ${formatSignedQuarter(shirtSlimBody)} cm</p>`);
+        }
 
         const outputPieces = [];
         const shirtLabel = idx === 0 ? "Shirt" : `Shirt ${idx + 1}`;
@@ -1322,6 +1345,7 @@ function loadFromStorage() {
         adjustments: item?.adjustments || "",
         shirtSleeve: normalizeNegativeOnlyValue(item?.shirtSleeve),
         shirtBody: normalizeNegativeOnlyValue(item?.shirtBody),
+        shirtSlimBody: normalizeNegativeOnlyValue(item?.shirtSlimBody),
       }));
       if (!shirts.length) shirts = [createEmptyItem()];
     } else {
