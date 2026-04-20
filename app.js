@@ -106,23 +106,10 @@ function hasGarmentData(item) {
   );
 }
 
-function formatQuarter(value) {
-  const abs = Math.abs(Number(value) || 0);
-  const whole = Math.floor(abs / 4);
-  const remainder = abs % 4;
-  const fraction =
-    remainder === 0 ? "" : remainder === 1 ? "1/4" : remainder === 2 ? "1/2" : "3/4";
-
-  if (whole && fraction) return `${whole} ${fraction}`;
-  if (whole) return `${whole}`;
-  return fraction || "0";
-}
-
 function formatSignedQuarter(value) {
   const numeric = Number(value) || 0;
   if (numeric === 0) return "0";
-  const sign = numeric > 0 ? "+" : "-";
-  return `${sign}${formatQuarter(numeric)}`;
+  return `${numeric > 0 ? "+" : ""}${numeric}`;
 }
 
 function formatFileBaseName(name) {
@@ -155,6 +142,13 @@ function escapeXml(text) {
 
 function buildButtonsOptions(selectedValue) {
   return buildOptions(["1", "2", "3", "4"], selectedValue);
+}
+
+function normalizeTrouserCuff(value) {
+  const cuff = String(value || "").trim();
+  if (cuff === "1 3/4 in Cuff" || cuff === '1 3/4" Cuff') return "4.5 cm Cuff";
+  if (cuff === "2 in Cuff" || cuff === '2" Cuff') return "5 cm Cuff";
+  return cuff;
 }
 
 function renderJacketMeasurements(item, idx) {
@@ -323,10 +317,10 @@ function renderTrouserMeasurements(item, idx) {
             ${buildOptionsFromPairs(
               [
                 { value: "No Cuff", label: "No Cuff" },
-                { value: "1 3/4 in Cuff", label: "1 3/4\" Cuff" },
-                { value: "2 in Cuff", label: "2\" Cuff" },
+                { value: "4.5 cm Cuff", label: "4.5 cm Cuff" },
+                { value: "5 cm Cuff", label: "5 cm Cuff" },
               ],
-              item?.trouserCuff || "",
+              normalizeTrouserCuff(item?.trouserCuff),
             )}
           </select>
         </div>
@@ -775,19 +769,19 @@ function renderOutput() {
       ...jacketFilled.map((entry, idx) => {
         const measurements = [];
         if (Number(entry.halfBack)) {
-          measurements.push(`<p><strong>1/2 Back:</strong> ${formatSignedQuarter(entry.halfBack)}"</p>`);
+          measurements.push(`<p><strong>1/2 Back:</strong> ${formatSignedQuarter(entry.halfBack)} cm</p>`);
         }
         if (Number(entry.halfWaist)) {
-          measurements.push(`<p><strong>1/2 Waist:</strong> ${formatSignedQuarter(entry.halfWaist)}"</p>`);
+          measurements.push(`<p><strong>1/2 Waist:</strong> ${formatSignedQuarter(entry.halfWaist)} cm</p>`);
         }
         if (Number(entry.shortenBody)) {
-          measurements.push(`<p><strong>Shorten Body:</strong> ${formatSignedQuarter(entry.shortenBody)}"</p>`);
+          measurements.push(`<p><strong>Shorten Body:</strong> ${formatSignedQuarter(entry.shortenBody)} cm</p>`);
         }
         if (Number(entry.sleeves)) {
-          measurements.push(`<p><strong>Sleeves:</strong> ${formatSignedQuarter(entry.sleeves)}"</p>`);
+          measurements.push(`<p><strong>Sleeves:</strong> ${formatSignedQuarter(entry.sleeves)} cm</p>`);
         }
         if (Number(entry.tightenCollar)) {
-          measurements.push(`<p><strong>Tighten Collar:</strong> ${formatSignedQuarter(entry.tightenCollar)}"</p>`);
+          measurements.push(`<p><strong>Tighten Collar:</strong> ${formatSignedQuarter(entry.tightenCollar)} cm</p>`);
         }
         if ((entry.buttons || "").trim()) {
           measurements.push(`<p><strong>Buttons:</strong> ${escapeHtml(entry.buttons)}</p>`);
@@ -825,36 +819,29 @@ function renderOutput() {
         const notes = formatMultiline(entry.adjustments);
         const measurements = [];
         if (Number(entry.trouserWaist)) {
-          measurements.push(`<p><strong>Waist:</strong> ${formatSignedQuarter(entry.trouserWaist)}"</p>`);
+          measurements.push(`<p><strong>Waist:</strong> ${formatSignedQuarter(entry.trouserWaist)} cm</p>`);
         }
         if (Number(entry.trouserSeat)) {
-          measurements.push(`<p><strong>Seat:</strong> ${formatSignedQuarter(entry.trouserSeat)}"</p>`);
+          measurements.push(`<p><strong>Seat:</strong> ${formatSignedQuarter(entry.trouserSeat)} cm</p>`);
         }
         if (Number(entry.trouserThigh)) {
-          measurements.push(`<p><strong>Thigh:</strong> ${formatSignedQuarter(entry.trouserThigh)}"</p>`);
+          measurements.push(`<p><strong>Thigh:</strong> ${formatSignedQuarter(entry.trouserThigh)} cm</p>`);
         }
         if (Number(entry.trouserKnee)) {
-          measurements.push(`<p><strong>Knee:</strong> ${formatSignedQuarter(entry.trouserKnee)}"</p>`);
+          measurements.push(`<p><strong>Knee:</strong> ${formatSignedQuarter(entry.trouserKnee)} cm</p>`);
         }
         if (Number(entry.trouserLegOpening)) {
-          measurements.push(`<p><strong>Leg Opening:</strong> ${formatSignedQuarter(entry.trouserLegOpening)}"</p>`);
+          measurements.push(`<p><strong>Leg Opening:</strong> ${formatSignedQuarter(entry.trouserLegOpening)} cm</p>`);
         }
         if (Number(entry.trouserInseam)) {
-          measurements.push(`<p><strong>Inseam:</strong> ${formatSignedQuarter(entry.trouserInseam)}"</p>`);
+          measurements.push(`<p><strong>Inseam:</strong> ${formatSignedQuarter(entry.trouserInseam)} cm</p>`);
         }
         if ((entry.trouserTotalLength || "").trim()) {
-          measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)}"</p>`);
+          measurements.push(`<p><strong>Total Length:</strong> ${escapeHtml(entry.trouserTotalLength)} cm</p>`);
         }
         if ((entry.trouserCuff || "").trim()) {
-          const cuffLabel = entry.trouserCuff
-            .replace(/\bin\b/g, "\"")
-            .replace(/\s*Cuff\b/i, "")
-            .replace(/\s*"\s*/g, "\"")
-            .replace(/\s+"/g, "\"")
-            .replace(/"\s+/g, "\"")
-            .trim();
-          const cuffLabelHtml = escapeHtml(cuffLabel).replace(/&quot;/g, "&#34;");
-          measurements.push(`<p><strong>Cuff Style:</strong> ${cuffLabelHtml}</p>`);
+          const cuffLabel = normalizeTrouserCuff(entry.trouserCuff).replace(/\s*Cuff\b/i, "").trim();
+          measurements.push(`<p><strong>Cuff Style:</strong> ${escapeHtml(cuffLabel)}</p>`);
         }
 
         const outputPieces = [];
@@ -889,10 +876,10 @@ function renderOutput() {
         const notes = formatMultiline(entry.adjustments);
         const measurements = [];
         if (Number(entry.shirtSleeve)) {
-          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(entry.shirtSleeve)}"</p>`);
+          measurements.push(`<p><strong>Sleeve Length:</strong> ${formatSignedQuarter(entry.shirtSleeve)} cm</p>`);
         }
         if (Number(entry.shirtBody)) {
-          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(entry.shirtBody)}"</p>`);
+          measurements.push(`<p><strong>Body Length:</strong> ${formatSignedQuarter(entry.shirtBody)} cm</p>`);
         }
 
         const outputPieces = [];
