@@ -26,6 +26,7 @@ const printBtn = document.getElementById("printBtn");
 const clearBtn = document.getElementById("clearBtn");
 const driveFolderModal = document.getElementById("driveFolderModal");
 const driveFolderPath = document.getElementById("driveFolderPath");
+const driveFolderSearch = document.getElementById("driveFolderSearch");
 const driveFolderList = document.getElementById("driveFolderList");
 const driveFolderUpBtn = document.getElementById("driveFolderUpBtn");
 const driveFolderCancelBtn = document.getElementById("driveFolderCancelBtn");
@@ -701,11 +702,13 @@ function chooseDriveFolder(token) {
     const stack = [{ id: DRIVE_FOLDER_ID, name: DRIVE_ROOT_FOLDER_NAME }];
     let settled = false;
     let handleFolderClick = null;
+    let currentFolders = [];
 
     const cleanup = () => {
       driveFolderCancelBtn.removeEventListener("click", handleCancel);
       driveFolderChooseBtn.removeEventListener("click", handleChoose);
       driveFolderUpBtn.removeEventListener("click", handleBack);
+      driveFolderSearch.removeEventListener("input", handleSearch);
       if (handleFolderClick) {
         driveFolderList.removeEventListener("click", handleFolderClick);
       }
@@ -728,22 +731,37 @@ function chooseDriveFolder(token) {
 
     const currentFolder = () => stack[stack.length - 1];
 
+    const renderFolderRows = (folders) => {
+      const query = driveFolderSearch.value.trim().toLowerCase();
+      const visibleFolders = query
+        ? folders.filter((item) => item.name.toLowerCase().includes(query))
+        : folders;
+
+      if (!folders.length) {
+        driveFolderList.innerHTML = '<p class="drive-folder-empty">No folders inside this folder.</p>';
+        return;
+      }
+
+      if (!visibleFolders.length) {
+        driveFolderList.innerHTML = '<p class="drive-folder-empty">No matching folders here.</p>';
+        return;
+      }
+
+      driveFolderList.innerHTML = visibleFolders
+        .map((item) => `<button type="button" class="drive-folder-row" data-folder-id="${escapeAttr(item.id)}" data-folder-name="${escapeAttr(item.name)}">${escapeHtml(item.name)}</button>`)
+        .join("");
+    };
+
     const renderFolders = async () => {
       const folder = currentFolder();
       driveFolderPath.textContent = stack.map((item) => item.name).join(" / ");
+      driveFolderSearch.value = "";
       driveFolderList.innerHTML = '<p class="drive-folder-empty">Loading folders...</p>';
       driveFolderUpBtn.disabled = stack.length === 1;
 
       try {
-        const folders = await fetchDriveFolders(token, folder.id);
-        if (!folders.length) {
-          driveFolderList.innerHTML = '<p class="drive-folder-empty">No folders inside this folder.</p>';
-          return;
-        }
-
-        driveFolderList.innerHTML = folders
-          .map((item) => `<button type="button" class="drive-folder-row" data-folder-id="${escapeAttr(item.id)}" data-folder-name="${escapeAttr(item.name)}">${escapeHtml(item.name)}</button>`)
-          .join("");
+        currentFolders = await fetchDriveFolders(token, folder.id);
+        renderFolderRows(currentFolders);
       } catch (err) {
         fail(err);
       }
@@ -751,6 +769,7 @@ function chooseDriveFolder(token) {
 
     const handleCancel = () => finish(null);
     const handleChoose = () => finish(currentFolder());
+    const handleSearch = () => renderFolderRows(currentFolders);
     const handleBack = () => {
       if (stack.length > 1) {
         stack.pop();
@@ -766,6 +785,7 @@ function chooseDriveFolder(token) {
     };
 
     driveFolderList.addEventListener("click", handleFolderClick);
+    driveFolderSearch.addEventListener("input", handleSearch);
     driveFolderCancelBtn.addEventListener("click", handleCancel);
     driveFolderChooseBtn.addEventListener("click", handleChoose);
     driveFolderUpBtn.addEventListener("click", handleBack);
