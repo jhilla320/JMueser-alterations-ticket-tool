@@ -32,6 +32,7 @@ const DRIVE_TOKEN_KEY = "driveAccessToken";
 const DRIVE_TOKEN_EXP_KEY = "driveAccessTokenExp";
 const GOOGLE_CLIENT_ID = "617892178220-84fg83gdjhjssb3et6e5ufjnkb8cn1v2.apps.googleusercontent.com";
 const DRIVE_FOLDER_ID = "0AATpjcETwsYwUk9PVA";
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
@@ -135,6 +136,21 @@ function formatFileBaseName(name) {
     .split(" ")
     .map((part) => (part ? part[0].toUpperCase() + part.slice(1).toLowerCase() : part))
     .join(" ");
+}
+
+function formatFileTime(date = new Date()) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}${minutes}`;
+}
+
+function escapeXml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 function buildButtonsOptions(selectedValue) {
@@ -507,6 +523,25 @@ function buildDriveMultipart({ filename, content, mimeType, folderId = "" }) {
     `Content-Type: ${mimeType}\r\n\r\n` +
     `${content}\r\n` +
     `--${boundary}--`;
+
+  return { body, boundary };
+}
+
+function buildDriveMultipartBlob({ filename, blob, mimeType, folderId = "" }) {
+  const boundary = `boundary_${Math.random().toString(36).slice(2)}`;
+  const metadata = folderId ? { name: filename, parents: [folderId] } : { name: filename };
+  const body = new Blob(
+    [
+      `--${boundary}\r\n`,
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n",
+      `${JSON.stringify(metadata)}\r\n`,
+      `--${boundary}\r\n`,
+      `Content-Type: ${mimeType}\r\n\r\n`,
+      blob,
+      `\r\n--${boundary}--`,
+    ],
+    { type: `multipart/related; boundary=${boundary}` },
+  );
 
   return { body, boundary };
 }
@@ -921,15 +956,15 @@ function saveToStorage() {
   saveStatus.textContent = `Autosaved at ${stamp}`;
 }
 
-function saveToLocalFile() {
+async function saveToLocalFile() {
   const state = buildState();
   const safeName = formatFileBaseName(state.customerName).slice(0, 40);
   const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-  const filename = `${safeName}_${datePart}.docx`;
+  const timePart = formatFileTime(new Date(state.savedAt));
+  const filename = `${safeName}_${datePart}_${timePart}.docx`;
   renderOutput();
 
-  const content = buildExportHtml();
-  const blob = new Blob([content], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document;charset=utf-8" });
+  const blob = await buildDocxBlob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -987,6 +1022,110 @@ function buildExportHtml() {
     </article>
   </body>
 </html>`;
+}
+
+function runXmlFromNode(node, inherited = {}) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent || "";
+    if (!text) return "";
+    const preserve = /^\s|\s$/.test(text) ? ' xml:space="preserve"' : "";
+    const props = [
+      inherited.bold ? "<w:b/>" : "",
+      inherited.fontSize ? `<w:sz w:val="${inherited.fontSize}"/><w:szCs w:val="${inherited.fontSize}"/>` : "",
+      inherited.color ? `<w:color w:val="${inherited.color}"/>` : "",
+    ].join("");
+    const runProps = props ? `<w:rPr>${props}</w:rPr>` : "";
+    return `<w:r>${runProps}<w:t${preserve}>${escapeXml(text)}</w:t></w:r>`;
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return "";
+  }
+
+  if (node.tagName === "BR") {
+    return "<w:r><w:br/></w:r>";
+  }
+
+  const next = { ...inherited, bold: inherited.bold || node.tagName === "STRONG" };
+  return Array.from(node.childNodes).map((child) => runXmlFromNode(child, next)).join("");
+}
+
+function paragraphXml(element, options = {}) {
+  const spacingBefore = options.before ?? 0;
+  const spacingAfter = options.after ?? 120;
+  const border = options.border
+    ? '<w:pBdr><w:top w:val="single" w:sz="4" w:space="1" w:color="C8C0B4"/></w:pBdr>'
+    : "";
+  const paragraphProps = `<w:pPr><w:spacing w:before="${spacingBefore}" w:after="${spacingAfter}" w:line="276" w:lineRule="auto"/>${border}</w:pPr>`;
+  const runOptions = { fontSize: options.fontSize, color: options.color };
+  return `<w:p>${paragraphProps}${Array.from(element.childNodes).map((child) => runXmlFromNode(child, runOptions)).join("")}</w:p>`;
+}
+
+function buildDocxDocumentXml() {
+  const bodyParts = [];
+  Array.from(printArea.children).forEach((child) => {
+    if (child.matches?.(".garment-output-block")) {
+      Array.from(child.children).forEach((paragraph, index) => {
+        bodyParts.push(paragraphXml(paragraph, { before: index === 0 ? 180 : 0, after: 120, border: index === 0 }));
+      });
+      return;
+    }
+
+    if (child.matches?.(".client-name")) {
+      bodyParts.push(paragraphXml(child, { fontSize: 24, after: 120 }));
+      return;
+    }
+
+    if (child.matches?.(".meta")) {
+      bodyParts.push(paragraphXml(child, { fontSize: 14, before: 240, after: 0 }));
+      return;
+    }
+
+    if (child.matches?.(".rush-flag")) {
+      bodyParts.push(paragraphXml(child, { color: "B42318", after: 160 }));
+      return;
+    }
+
+    bodyParts.push(paragraphXml(child, { after: 120 }));
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    ${bodyParts.join("")}
+    <w:sectPr>
+      <w:pgSz w:w="12240" w:h="15840"/>
+      <w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="720" w:footer="720" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+}
+
+async function buildDocxBlob() {
+  if (!window.JSZip) {
+    throw new Error("DOCX generator failed to load. Please refresh and try again.");
+  }
+
+  const zip = new JSZip();
+  zip.file(
+    "[Content_Types].xml",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`,
+  );
+  zip.folder("_rels").file(
+    ".rels",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`,
+  );
+  zip.folder("word").file("document.xml", buildDocxDocumentXml());
+
+  return zip.generateAsync({ type: "blob", mimeType: DOCX_MIME });
 }
 
 function resetPrintScale() {
@@ -1240,14 +1379,16 @@ driveSaveBtn.addEventListener("click", async () => {
 
     const safeName = formatFileBaseName(state.customerName).slice(0, 40);
     const datePart = new Date(state.savedAt).toISOString().slice(0, 10);
-  const filename = `${safeName}_${datePart}.docx`;
+    const timePart = formatFileTime(new Date(state.savedAt));
+    const filename = `${safeName}_${datePart}_${timePart}.docx`;
 
     const token = await getValidDriveToken();
     saveStatus.textContent = "Uploading to Drive...";
-    const { body, boundary } = buildDriveMultipart({
+    const docxBlob = await buildDocxBlob();
+    const { body, boundary } = buildDriveMultipartBlob({
       filename,
-      content: buildExportHtml(),
-      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      blob: docxBlob,
+      mimeType: DOCX_MIME,
       folderId: DRIVE_FOLDER_ID,
     });
 
