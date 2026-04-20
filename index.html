@@ -115,6 +115,19 @@
       </section>
     </main>
 
+    <div id="driveFolderModal" class="drive-folder-modal" role="dialog" aria-modal="true" aria-labelledby="driveFolderTitle" hidden>
+      <div class="drive-folder-dialog">
+        <h2 id="driveFolderTitle">Choose Google Folder</h2>
+        <p id="driveFolderPath" class="drive-folder-path">Shared Drive</p>
+        <div id="driveFolderList" class="drive-folder-list" aria-live="polite"></div>
+        <div class="drive-folder-actions">
+          <button id="driveFolderUpBtn" type="button" class="secondary-btn">Back</button>
+          <button id="driveFolderCancelBtn" type="button" class="secondary-btn">Cancel</button>
+          <button id="driveFolderChooseBtn" type="button" class="highlight-btn">Use This Folder</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="app.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>

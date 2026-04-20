@@ -419,6 +419,15 @@ button:hover {
   background: var(--accent-dark);
 }
 
+.secondary-btn {
+  background: #e8e1d7;
+  color: #2b2825;
+}
+
+.secondary-btn:hover {
+  background: #d8cfc3;
+}
+
 .stepper-btn {
   width: 2.4rem;
   height: 2.4rem;
@@ -522,6 +531,84 @@ button:hover {
 .output .rush-flag {
   color: #b42318;
   font-weight: 800;
+}
+
+.drive-folder-modal[hidden] {
+  display: none;
+}
+
+.drive-folder-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(30, 29, 26, 0.48);
+}
+
+.drive-folder-dialog {
+  width: min(100%, 34rem);
+  max-height: min(80vh, 38rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1.2rem;
+  border: 1px solid #d8ccbd;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+}
+
+.drive-folder-dialog h2 {
+  margin: 0;
+  color: #1f4338;
+}
+
+.drive-folder-path {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.drive-folder-list {
+  min-height: 10rem;
+  overflow: auto;
+  border: 1px solid #d8ccbd;
+  border-radius: 12px;
+  padding: 0.35rem;
+  background: #ffffff;
+}
+
+.drive-folder-row,
+.drive-folder-empty {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+}
+
+.drive-folder-row {
+  background: #ffffff;
+  color: #1e1d1a;
+}
+
+.drive-folder-row:hover {
+  background: #f4f0ea;
+}
+
+.drive-folder-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.drive-folder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 680px) {

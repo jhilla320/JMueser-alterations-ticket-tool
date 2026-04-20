@@ -24,15 +24,24 @@ const driveAuthBtn = document.getElementById("driveAuthBtn");
 const driveSaveBtn = document.getElementById("driveSaveBtn");
 const printBtn = document.getElementById("printBtn");
 const clearBtn = document.getElementById("clearBtn");
+const driveFolderModal = document.getElementById("driveFolderModal");
+const driveFolderPath = document.getElementById("driveFolderPath");
+const driveFolderList = document.getElementById("driveFolderList");
+const driveFolderUpBtn = document.getElementById("driveFolderUpBtn");
+const driveFolderCancelBtn = document.getElementById("driveFolderCancelBtn");
+const driveFolderChooseBtn = document.getElementById("driveFolderChooseBtn");
 const garmentTabs = Array.from(document.querySelectorAll(".garment-tab"));
 const garmentPanels = Array.from(document.querySelectorAll(".garment-panel"));
 
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly";
 const DRIVE_TOKEN_KEY = "driveAccessToken";
 const DRIVE_TOKEN_EXP_KEY = "driveAccessTokenExp";
+const DRIVE_SCOPE_KEY = "driveAccessTokenScope";
 const GOOGLE_CLIENT_ID = "617892178220-84fg83gdjhjssb3et6e5ufjnkb8cn1v2.apps.googleusercontent.com";
 const DRIVE_FOLDER_ID = "0AATpjcETwsYwUk9PVA";
+const DRIVE_ROOT_FOLDER_NAME = "Shared Drive";
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
 const JACKET_SIZES = ["custom", "36", "38", "40", "42", "44", "46", "48"];
 const TROUSER_SIZES = ["custom", "28", "30", "32", "34", "36", "38"];
 const SHIRT_SIZES = ["custom", "15", "15.5", "15.75", "16", "16.5", "17", "17.5"];
@@ -559,6 +568,7 @@ function setDriveToken(token, expiresInSeconds) {
   const expiry = Date.now() + Number(expiresInSeconds || 0) * 1000;
   localStorage.setItem(DRIVE_TOKEN_KEY, token);
   localStorage.setItem(DRIVE_TOKEN_EXP_KEY, String(expiry));
+  localStorage.setItem(DRIVE_SCOPE_KEY, DRIVE_SCOPE);
   saveStatus.textContent = "Google Drive connected";
   updateDriveButtons();
 }
@@ -566,6 +576,7 @@ function setDriveToken(token, expiresInSeconds) {
 function clearDriveToken() {
   localStorage.removeItem(DRIVE_TOKEN_KEY);
   localStorage.removeItem(DRIVE_TOKEN_EXP_KEY);
+  localStorage.removeItem(DRIVE_SCOPE_KEY);
   updateDriveButtons();
 }
 
@@ -585,7 +596,8 @@ function ensureDriveClient() {
 function updateDriveButtons() {
   const token = getDriveToken();
   const exp = getDriveTokenExpiry();
-  const isValid = token && exp && Date.now() < exp - 30_000;
+  const scope = localStorage.getItem(DRIVE_SCOPE_KEY) || "";
+  const isValid = token && exp && scope === DRIVE_SCOPE && Date.now() < exp - 30_000;
   driveAuthBtn.style.display = isValid ? "none" : "inline-flex";
 }
 
@@ -613,7 +625,8 @@ function requestDriveToken(prompt) {
 async function getValidDriveToken() {
   const token = getDriveToken();
   const exp = getDriveTokenExpiry();
-  if (token && exp && Date.now() < exp - 30_000) {
+  const scope = localStorage.getItem(DRIVE_SCOPE_KEY) || "";
+  if (token && exp && scope === DRIVE_SCOPE && Date.now() < exp - 30_000) {
     saveStatus.textContent = "Using existing Drive token";
     return token;
   }
@@ -653,6 +666,113 @@ function buildDriveMultipartBlob({ filename, blob, mimeType, folderId = "" }) {
   );
 
   return { body, boundary };
+}
+
+async function fetchDriveFolders(token, parentId) {
+  const params = new URLSearchParams({
+    corpora: "drive",
+    driveId: DRIVE_FOLDER_ID,
+    includeItemsFromAllDrives: "true",
+    supportsAllDrives: "true",
+    orderBy: "name_natural",
+    pageSize: "100",
+    fields: "files(id,name)",
+    q: `'${parentId}' in parents and mimeType = '${DRIVE_FOLDER_MIME}' and trashed = false`,
+  });
+
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      clearDriveToken();
+      throw new Error("Drive session expired. Click Save to Google again.");
+    }
+    throw new Error("Could not load Google Drive folders");
+  }
+
+  const data = await response.json();
+  return data.files || [];
+}
+
+function chooseDriveFolder(token) {
+  return new Promise((resolve, reject) => {
+    const stack = [{ id: DRIVE_FOLDER_ID, name: DRIVE_ROOT_FOLDER_NAME }];
+    let settled = false;
+    let handleFolderClick = null;
+
+    const cleanup = () => {
+      driveFolderCancelBtn.removeEventListener("click", handleCancel);
+      driveFolderChooseBtn.removeEventListener("click", handleChoose);
+      driveFolderUpBtn.removeEventListener("click", handleBack);
+      if (handleFolderClick) {
+        driveFolderList.removeEventListener("click", handleFolderClick);
+      }
+      driveFolderModal.hidden = true;
+    };
+
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    };
+
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    };
+
+    const currentFolder = () => stack[stack.length - 1];
+
+    const renderFolders = async () => {
+      const folder = currentFolder();
+      driveFolderPath.textContent = stack.map((item) => item.name).join(" / ");
+      driveFolderList.innerHTML = '<p class="drive-folder-empty">Loading folders...</p>';
+      driveFolderUpBtn.disabled = stack.length === 1;
+
+      try {
+        const folders = await fetchDriveFolders(token, folder.id);
+        if (!folders.length) {
+          driveFolderList.innerHTML = '<p class="drive-folder-empty">No folders inside this folder.</p>';
+          return;
+        }
+
+        driveFolderList.innerHTML = folders
+          .map((item) => `<button type="button" class="drive-folder-row" data-folder-id="${escapeAttr(item.id)}" data-folder-name="${escapeAttr(item.name)}">${escapeHtml(item.name)}</button>`)
+          .join("");
+      } catch (err) {
+        fail(err);
+      }
+    };
+
+    const handleCancel = () => finish(null);
+    const handleChoose = () => finish(currentFolder());
+    const handleBack = () => {
+      if (stack.length > 1) {
+        stack.pop();
+        renderFolders();
+      }
+    };
+
+    handleFolderClick = (event) => {
+      const target = event.target.closest(".drive-folder-row");
+      if (!target || settled) return;
+      stack.push({ id: target.dataset.folderId, name: target.dataset.folderName });
+      renderFolders();
+    };
+
+    driveFolderList.addEventListener("click", handleFolderClick);
+    driveFolderCancelBtn.addEventListener("click", handleCancel);
+    driveFolderChooseBtn.addEventListener("click", handleChoose);
+    driveFolderUpBtn.addEventListener("click", handleBack);
+
+    driveFolderModal.hidden = false;
+    renderFolders();
+  });
 }
 
 function isIOSDevice() {
@@ -1507,13 +1627,20 @@ driveSaveBtn.addEventListener("click", async () => {
     const filename = `${safeName}_${datePart}_${timePart}.docx`;
 
     const token = await getValidDriveToken();
+    saveStatus.textContent = "Choose a Google Drive folder...";
+    const selectedFolder = await chooseDriveFolder(token);
+    if (!selectedFolder) {
+      saveStatus.textContent = "Google save canceled";
+      return;
+    }
+
     saveStatus.textContent = "Uploading to Drive...";
     const docxBlob = await buildDocxBlob();
     const { body, boundary } = buildDriveMultipartBlob({
       filename,
       blob: docxBlob,
       mimeType: DOCX_MIME,
-      folderId: DRIVE_FOLDER_ID,
+      folderId: selectedFolder.id,
     });
 
     const response = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true", {
@@ -1534,7 +1661,7 @@ driveSaveBtn.addEventListener("click", async () => {
       throw new Error("Upload failed");
     }
 
-    saveStatus.textContent = DRIVE_FOLDER_ID ? `Saved to Shared Drive: ${filename}` : `Saved to Drive: ${filename}`;
+    saveStatus.textContent = `Saved to ${selectedFolder.name}: ${filename}`;
   } catch (err) {
     saveStatus.textContent = `Drive error: ${err.message}`;
     alert(`Drive upload failed: ${err.message}`);
