@@ -408,6 +408,17 @@ function getBalanceDueValue() {
   return selected ? selected.value : "";
 }
 
+function normalizeBalanceValue(value) {
+  if (value === "Yes") return "Due";
+  if (value === "No") return "Paid";
+  return value === "Paid" || value === "Due" ? value : "";
+}
+
+function formatBalanceDisplay(value) {
+  const balance = normalizeBalanceValue(value);
+  return balance ? `Balance ${balance}` : "";
+}
+
 function updateTailorOtherVisibility() {
   tailorOtherWrap.hidden = tailorInput.value !== "Other";
 }
@@ -795,6 +806,7 @@ function renderOutput() {
   const dueDate = formatDueDate(dueDateValue);
   const rushFlag = isRushDueDate(dueDateValue, now);
   const balanceDue = getBalanceDueValue();
+  const balanceDisplay = formatBalanceDisplay(balanceDue);
 
   const jacketFilled = jackets.filter(hasGarmentData);
   const trouserFilled = trousers.filter(hasGarmentData);
@@ -957,7 +969,7 @@ function renderOutput() {
     <p class="ticket-detail"><strong>Tailor:</strong> ${escapeHtml(tailor)}</p>
     <p class="ticket-detail"><strong>Salesperson:</strong> ${escapeHtml(salesperson)}</p>
     <p class="ticket-detail"><strong>Due Date:</strong> ${escapeHtml(dueDate)}</p>
-    ${balanceDue ? `<p class="ticket-detail"><strong>Balance Due?:</strong> ${escapeHtml(balanceDue)}</p>` : ""}
+    ${balanceDisplay ? `<p class="ticket-detail"><strong>${escapeHtml(balanceDisplay)}</strong></p>` : ""}
     <p class="meta"><strong>Ticket Created on:</strong> ${escapeHtml(now.toLocaleString())}</p>
     ${garmentSections.join("")}
   `;
@@ -1309,7 +1321,7 @@ function loadFromStorage() {
 
     setActiveTab(parsed.activeTab || "jacket", false);
 
-    const balanceDue = parsed.balanceDue === "Yes" || parsed.balanceDue === "No" ? parsed.balanceDue : "";
+    const balanceDue = normalizeBalanceValue(parsed.balanceDue);
     const selectedBalance = document.querySelector('input[name="balanceDue"]:checked');
     if (selectedBalance) {
       selectedBalance.checked = false;
