@@ -39,7 +39,7 @@ const DRIVE_TOKEN_KEY = "driveAccessToken";
 const DRIVE_TOKEN_EXP_KEY = "driveAccessTokenExp";
 const DRIVE_SCOPE_KEY = "driveAccessTokenScope";
 const GOOGLE_CLIENT_ID = "617892178220-84fg83gdjhjssb3et6e5ufjnkb8cn1v2.apps.googleusercontent.com";
-const DRIVE_FOLDER_ID = "0AATpjcETwsYwUk9PVA";
+const DRIVE_FOLDER_ID = "1rk-sPX1XWoETrr_g4iwk13GoxYgDFLyx";
 const DRIVE_ROOT_FOLDER_NAME = "Shared Drive";
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const DRIVE_FOLDER_MIME = "application/vnd.google-apps.folder";
@@ -671,8 +671,6 @@ function buildDriveMultipartBlob({ filename, blob, mimeType, folderId = "" }) {
 
 async function fetchDriveFolders(token, parentId) {
   const params = new URLSearchParams({
-    corpora: "drive",
-    driveId: DRIVE_FOLDER_ID,
     includeItemsFromAllDrives: "true",
     supportsAllDrives: "true",
     orderBy: "name_natural",
