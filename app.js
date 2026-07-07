@@ -126,8 +126,8 @@ function hasGarmentData(item) {
 function formatSignedQuarter(value) {
   const numeric = Number(value) || 0;
   if (numeric === 0) return "0";
-  const formatted = Number.isInteger(numeric) ? `${numeric}` : numeric.toFixed(1);
-  return `${numeric > 0 ? "+" : ""}${formatted}`;
+  const formatted = Number.isInteger(Math.abs(numeric)) ? `${Math.abs(numeric)}` : Math.abs(numeric).toFixed(1);
+  return `${numeric > 0 ? "+ " : "– "}${formatted}`;
 }
 
 function formatFileBaseName(name) {
