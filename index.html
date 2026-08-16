@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alterations Ticket Tool — J. Mueser</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <section id="authGate" class="auth-gate">
+      <div class="auth-card">
+        <p class="auth-kicker">J. Mueser</p>
+        <h1>The Alterations Log</h1>
+        <p>Sign in with your J.Mueser Google account to create, edit, and print alteration tickets.</p>
+        <button id="authLoginBtn" class="btn-primary" type="button">Sign in with Google</button>
+        <p id="authStatus" class="auth-status" aria-live="polite">J.Mueser accounts only.</p>
+      </div>
+    </section>
+
+    <main id="appShell" class="app" hidden>
+      <header class="hero">
+        <div class="hero-text">
+          <h1>The Alterations Log</h1>
+          <p class="hero-status"><span class="live-dot" aria-hidden="true"></span>Live · All Tickets are synced across accounts</p>
+        </div>
+        <div class="hero-actions">
+          <span class="account-pill"><span class="scissors" aria-hidden="true">✂</span><span id="accountEmail" class="account-email"></span></span>
+          <button id="signOutBtn" class="link-btn" type="button">sign out</button>
+        </div>
+      </header>
+
+      <nav class="view-tabs" role="tablist" aria-label="Section">
+        <button id="nav-newTicket" class="view-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="view-newTicket">Create Ticket</button>
+        <button id="nav-ticketLog" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="view-ticketLog">Ticket Log</button>
+        <button id="nav-studio" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="view-studio">Studio</button>
+      </nav>
+
+      <!-- ================= NEW TICKET VIEW ================= -->
+      <section id="view-newTicket" class="view is-active">
+        <div class="ticket-layout">
+          <section class="panel form-panel">
+            <div id="editingBanner" class="editing-banner" hidden>
+              <span id="editingBannerText"></span>
+              <button id="editingBannerExit" type="button" class="filter-multiselect-link">Start new ticket instead</button>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label for="customerName">Client Name</label>
+                <input id="customerName" name="customerName" type="text" placeholder="Client name" />
+              </div>
+
+              <div>
+                <label for="tailor">Tailor</label>
+                <select id="tailor" name="tailor" required>
+                  <option value="" selected>Select</option>
+                  <option value="Luis">Luis</option>
+                  <option value="Jesus">Jesus</option>
+                  <option value="Sam">Sam</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="salesperson">Salesperson</label>
+                <select id="salesperson" name="salesperson" required>
+                  <option value="" selected>Select</option>
+                  <option value="Bodhi">Bodhi</option>
+                  <option value="Chase">Chase</option>
+                  <option value="Chris">Chris</option>
+                  <option value="Christian">Christian</option>
+                  <option value="Colin">Colin</option>
+                  <option value="Edris">Edris</option>
+                  <option value="Frank">Frank</option>
+                  <option value="Jake">Jake</option>
+                  <option value="Jeff">Jeff</option>
+                  <option value="Jonas">Jonas</option>
+                  <option value="Mattia">Mattia</option>
+                  <option value="Nor">Nor</option>
+                  <option value="Ryder">Ryder</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="dueDate">Due Date</label>
+                <input id="dueDate" name="dueDate" type="date" required />
+              </div>
+            </div>
+
+            <div class="choice-row">
+              <fieldset class="inline-choices">
+                <legend>Balance</legend>
+                <label><input type="radio" name="balanceDue" value="Paid" /> Paid</label>
+                <label><input type="radio" name="balanceDue" value="Due" /> Due</label>
+              </fieldset>
+            </div>
+
+            <section class="alterations-section">
+              <h3>Alterations</h3>
+              <div class="add-garment-row">
+                <button id="addJacketBtn" class="add-item-btn" type="button" data-garment-type="jacket">+ Add Jacket</button>
+                <button id="addTrouserBtn" class="add-item-btn" type="button" data-garment-type="trouser">+ Add Trouser</button>
+                <button id="addShirtBtn" class="add-item-btn" type="button" data-garment-type="shirt">+ Add Shirt</button>
+              </div>
+              <div id="garmentItemsList" class="item-list"></div>
+            </section>
+
+            <div class="actions">
+              <div class="actions-top-row">
+                <button id="driveSaveBtn" class="btn-primary" type="button">✂ Save Ticket</button>
+                <button id="clearBtn" class="btn-danger" type="button">Clear All</button>
+              </div>
+              <span id="saveStatus" aria-live="polite">Not saved yet</span>
+            </div>
+          </section>
+
+          <aside class="panel output-panel">
+            <p class="preview-tag">Ticket Preview</p>
+            <div class="pinked-edge" style="--pinked-fill: var(--panel);" aria-hidden="true"></div>
+            <article id="printArea" class="output" aria-label="Formatted alterations ticket"></article>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ================= TICKET LOG VIEW ================= -->
+      <section id="view-ticketLog" class="view">
+        <section class="panel">
+          <div class="log-header">
+            <h3 style="margin:0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem;">Ticket Log</h3>
+            <p id="logStats" class="log-stats">Sign in to see counts.</p>
+          </div>
+          <div class="log-toolbar">
+            <input id="ticketSearch" class="log-search" type="search" placeholder="Search by client name…" autocomplete="off" />
+
+            <div class="filter-multiselect" id="statusFilterWrap">
+              <button type="button" id="statusFilterBtn" class="filter-multiselect-btn">Status</button>
+              <div id="statusFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="statusFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="statusFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="statusFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <div class="filter-multiselect" id="tailorFilterWrap">
+              <button type="button" id="tailorFilterBtn" class="filter-multiselect-btn">Tailor</button>
+              <div id="tailorFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="tailorFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="tailorFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="tailorFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <div class="filter-multiselect" id="salespersonFilterWrap">
+              <button type="button" id="salespersonFilterBtn" class="filter-multiselect-btn">Salesperson</button>
+              <div id="salespersonFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="salespersonFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="salespersonFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="salespersonFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <label class="filter-checkbox"><input id="ticketRushFilter" type="checkbox" /> Rush only</label>
+            <label class="filter-checkbox filter-checkbox-persist"><input id="showCompletedFilter" type="checkbox" /> Show Completed</label>
+
+            <button id="clearFiltersBtn" class="btn-ghost" type="button">Clear Filters</button>
+            <button id="refreshTicketsBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+
+          <p id="ticketLogStatus" class="log-status" aria-live="polite">Sign in to load the ticket log.</p>
+
+          <div class="log-table-wrap">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Garments</th>
+                  <th>Tailor</th>
+                  <th>Salesperson</th>
+                  <th>Due Date</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th>Status Date</th>
+                  <th>Notes</th>
+                  <th>Ticket Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ticketLogBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= STUDIO VIEW ================= -->
+      <section id="view-studio" class="view">
+        <section class="panel" style="margin-bottom: 1.1rem;">
+          <h3 style="margin: 0.1rem 0 0.9rem; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem;">Add to Studio</h3>
+          <div class="field-grid">
+            <div>
+              <label for="studioClientName">Client Name</label>
+              <input id="studioClientName" type="text" placeholder="Client name" />
+            </div>
+            <div>
+              <label for="studioGarmentDescription">Garment Description</label>
+              <input id="studioGarmentDescription" type="text" placeholder="e.g. Navy suit, shipped from mill" />
+            </div>
+            <div>
+              <label for="studioArrivalDate">Arrival Date</label>
+              <input id="studioArrivalDate" type="date" />
+            </div>
+            <div>
+              <label for="studioSalesperson">Salesperson</label>
+              <select id="studioSalesperson">
+                <option value="" selected>Select</option>
+                <option value="Bodhi">Bodhi</option>
+                <option value="Chase">Chase</option>
+                <option value="Chris">Chris</option>
+                <option value="Christian">Christian</option>
+                <option value="Colin">Colin</option>
+                <option value="Edris">Edris</option>
+                <option value="Frank">Frank</option>
+                <option value="Jake">Jake</option>
+                <option value="Jeff">Jeff</option>
+                <option value="Jonas">Jonas</option>
+                <option value="Mattia">Mattia</option>
+                <option value="Nor">Nor</option>
+                <option value="Ryder">Ryder</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <div class="actions-top-row">
+              <button id="studioSaveBtn" class="btn-primary" type="button">✂ Add to Studio</button>
+            </div>
+            <span id="studioSaveStatus" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="log-header">
+            <h3 style="margin:0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem;">Studio Log</h3>
+            <p id="studioStats" class="log-stats">Sign in to see counts.</p>
+          </div>
+          <div class="log-toolbar">
+            <input id="studioSearch" class="log-search" type="search" placeholder="Search by client name…" autocomplete="off" />
+
+            <div class="filter-multiselect" id="studioStatusFilterWrap">
+              <button type="button" id="studioStatusFilterBtn" class="filter-multiselect-btn">Status</button>
+              <div id="studioStatusFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="studioStatusFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="studioStatusFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="studioStatusFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <div class="filter-multiselect" id="studioSalespersonFilterWrap">
+              <button type="button" id="studioSalespersonFilterBtn" class="filter-multiselect-btn">Salesperson</button>
+              <div id="studioSalespersonFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="studioSalespersonFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="studioSalespersonFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="studioSalespersonFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <button id="studioClearFiltersBtn" class="btn-ghost" type="button">Clear Filters</button>
+            <button id="studioRefreshBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+
+          <p id="studioLogStatus" class="log-status" aria-live="polite">Sign in to load the studio log.</p>
+
+          <div class="log-table-wrap">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Garment</th>
+                  <th>Arrival Date</th>
+                  <th>Salesperson</th>
+                  <th>Status</th>
+                  <th>Status Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studioLogBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="driveFolderModal" class="drive-folder-modal" role="dialog" aria-modal="true" aria-labelledby="driveFolderTitle" hidden>
+      <div class="drive-folder-dialog">
+        <h2 id="driveFolderTitle">Choose Google Folder</h2>
+        <p id="driveFolderPath" class="drive-folder-path">Shared Drive</p>
+        <input id="driveFolderSearch" class="drive-folder-search" type="search" placeholder="Search folders in this location" autocomplete="off" />
+        <div id="driveFolderList" class="drive-folder-list" aria-live="polite"></div>
+        <div class="drive-folder-create">
+          <label for="driveFolderNewName">New folder in this location</label>
+          <div class="drive-folder-create-row">
+            <input id="driveFolderNewName" class="drive-folder-new-input" type="text" placeholder="Folder name" autocomplete="off" />
+            <button id="driveFolderCreateBtn" type="button" class="btn-accent">+ Create</button>
+          </div>
+        </div>
+        <div class="drive-folder-actions">
+          <button id="driveFolderUpBtn" type="button" class="btn-ghost">Back</button>
+          <button id="driveFolderCancelBtn" type="button" class="btn-ghost">Cancel</button>
+          <button id="driveFolderChooseBtn" type="button" class="btn-primary">Use This Folder</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="notesModal" class="drive-folder-modal" role="dialog" aria-modal="true" aria-labelledby="notesModalTitle" hidden>
+      <div class="drive-folder-dialog">
+        <h2 id="notesModalTitle">Ticket Note</h2>
+        <p id="notesModalSubtitle" class="drive-folder-path"></p>
+        <textarea id="notesModalTextarea" class="notes-modal-textarea" rows="6" placeholder="Add a note about this ticket…"></textarea>
+        <div class="drive-folder-actions">
+          <button id="notesModalCancelBtn" type="button" class="btn-ghost">Cancel</button>
+          <button id="notesModalSaveBtn" type="button" class="btn-primary">Save Note</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="studioEditModal" class="drive-folder-modal" role="dialog" aria-modal="true" aria-labelledby="studioEditModalTitle" hidden>
+      <div class="drive-folder-dialog">
+        <h2 id="studioEditModalTitle">Edit Studio Item</h2>
+        <div class="field-grid">
+          <div>
+            <label for="studioEditClientName">Client Name</label>
+            <input id="studioEditClientName" type="text" />
+          </div>
+          <div>
+            <label for="studioEditGarmentDescription">Garment Description</label>
+            <input id="studioEditGarmentDescription" type="text" />
+          </div>
+          <div>
+            <label for="studioEditArrivalDate">Arrival Date</label>
+            <input id="studioEditArrivalDate" type="date" />
+          </div>
+          <div>
+            <label for="studioEditSalesperson">Salesperson</label>
+            <select id="studioEditSalesperson">
+              <option value="" selected>Select</option>
+              <option value="Bodhi">Bodhi</option>
+              <option value="Chase">Chase</option>
+              <option value="Chris">Chris</option>
+              <option value="Christian">Christian</option>
+              <option value="Colin">Colin</option>
+              <option value="Edris">Edris</option>
+              <option value="Frank">Frank</option>
+              <option value="Jake">Jake</option>
+              <option value="Jeff">Jeff</option>
+              <option value="Jonas">Jonas</option>
+              <option value="Mattia">Mattia</option>
+              <option value="Nor">Nor</option>
+              <option value="Ryder">Ryder</option>
+            </select>
+          </div>
+        </div>
+        <div class="drive-folder-actions">
+          <button id="studioEditCancelBtn" type="button" class="btn-ghost">Cancel</button>
+          <button id="studioEditSaveBtn" type="button" class="btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
