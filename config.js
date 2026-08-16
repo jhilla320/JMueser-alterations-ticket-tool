@@ -36,6 +36,8 @@ export const TICKET_STATUSES = [
   "Completed",
 ];
 
+export const STUDIO_STATUSES = ["In Studio", "Client Contact", "Fitting Scheduled", "Complete"];
+
 // --- Form options ------------------------------------------------------
 export const SALESPEOPLE = [
   "Bodhi", "Chase", "Chris", "Christian", "Colin", "Edris",

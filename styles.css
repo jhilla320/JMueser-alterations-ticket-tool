@@ -712,6 +712,13 @@ button:active { transform: translateY(1px); }
 .log-table .status-select[data-status="Filed"] { background: #ece8e0; color: var(--slate); border-color: var(--rule-strong); }
 .log-table .status-select[data-status="ATTENTION"] { background: var(--red-bg); color: var(--red); border-color: rgba(174, 59, 44, 0.4); font-weight: 800; }
 
+.log-table .status-select[data-status="In Studio"] { background: var(--chip-bg); color: var(--ink); }
+.log-table .status-select[data-status="Client Contact"] { background: var(--amber-bg); color: var(--amber); border-color: rgba(169, 121, 31, 0.35); }
+.log-table .status-select[data-status="Fitting Scheduled"],
+.log-table .status-select[data-status="Complete"] { background: #e4efe9; color: var(--forest); border-color: rgba(30, 74, 58, 0.3); }
+
+.converted-note { font-family: var(--font-mono); font-size: 0.68rem; color: var(--slate); white-space: nowrap; }
+
 .ticket-actions {
   display: flex;
   align-items: center;
@@ -857,7 +864,7 @@ button:active { transform: translateY(1px); }
 @media print {
   @page { size: letter; margin: 0.5in; }
   body { background: white; margin: 0; min-height: 0; }
-  .auth-gate, .hero, .view-tabs, .form-panel, .preview-tag, .tag-hole, .pinked-edge, #view-ticketLog { display: none; }
+  .auth-gate, .hero, .view-tabs, .form-panel, .preview-tag, .tag-hole, .pinked-edge, #view-ticketLog, #view-studio { display: none; }
   #view-newTicket, .app { display: block; max-width: none; margin: 0; padding: 0; }
   .ticket-layout { display: block; }
   .output-panel { border: none; box-shadow: none; padding: 0; background: white; position: static; overflow: visible; }

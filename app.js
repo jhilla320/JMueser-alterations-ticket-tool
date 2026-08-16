@@ -1,7 +1,10 @@
-import { TICKET_STATUSES, SALESPEOPLE } from "./config.js";
+import { TICKET_STATUSES, STUDIO_STATUSES, SALESPEOPLE } from "./config.js";
 import * as auth from "./google-auth.js";
 import { chooseDriveFolder, uploadFileToDrive, updateFileInDrive, trashDriveFile } from "./drive.js";
-import { getOrCreateLedger, appendTicketRow, updateTicketRecord, listTickets, updateTicketStatus, updateTicketNotes, deleteTicketRow } from "./sheets.js";
+import {
+  getOrCreateLedger, appendTicketRow, updateTicketRecord, listTickets, updateTicketStatus, updateTicketNotes, deleteTicketRow,
+  getOrCreateStudioTab, appendStudioEntry, listStudioEntries, updateStudioStatus, markStudioConverted, deleteStudioEntry,
+} from "./sheets.js";
 import { buildDocxBlob } from "./docx.js";
 
 const STORAGE_KEY = "alterationsTicketStateV2";
@@ -12,6 +15,7 @@ const ICONS = {
   download: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v9.5M6.5 9l3.5 3.5L13.5 9"/><path d="M4 15.5h12"/></svg>',
   delete: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 6h11"/><path d="M8 6V4.3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V6"/><path d="M6 6l.6 9a1 1 0 0 0 1 1h4.8a1 1 0 0 0 1-1L14 6"/></svg>',
   notes: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="12" height="14" rx="1.2"/><path d="M7 7.5h6M7 10.5h6M7 13.5h3.5"/></svg>',
+  convert: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="13" rx="2"/><path d="M6.5 10h6.5M10 6.5l3.5 3.5-3.5 3.5"/></svg>',
 };
 
 /* ------------------------------- DOM refs -------------------------------- */
@@ -61,8 +65,10 @@ const notesModalSaveBtn = el("notesModalSaveBtn");
 
 const navNewTicket = el("nav-newTicket");
 const navTicketLog = el("nav-ticketLog");
+const navStudio = el("nav-studio");
 const viewNewTicket = el("view-newTicket");
 const viewTicketLog = el("view-ticketLog");
+const viewStudio = el("view-studio");
 
 const ticketSearch = el("ticketSearch");
 const statusFilterEls = {
@@ -768,18 +774,24 @@ signOutBtn.addEventListener("click", () => {
 
 /* --------------------------------- view nav --------------------------------- */
 function setView(view) {
-  const isNew = view === "newTicket";
-  navNewTicket.classList.toggle("is-active", isNew);
-  navNewTicket.setAttribute("aria-selected", isNew ? "true" : "false");
-  navTicketLog.classList.toggle("is-active", !isNew);
-  navTicketLog.setAttribute("aria-selected", !isNew ? "true" : "false");
-  viewNewTicket.classList.toggle("is-active", isNew);
-  viewTicketLog.classList.toggle("is-active", !isNew);
-  if (!isNew) refreshTicketLog();
+  const tabs = [
+    { key: "newTicket", nav: navNewTicket, viewEl: viewNewTicket },
+    { key: "ticketLog", nav: navTicketLog, viewEl: viewTicketLog },
+    { key: "studio", nav: navStudio, viewEl: viewStudio },
+  ];
+  tabs.forEach(({ key, nav, viewEl }) => {
+    const isActive = key === view;
+    nav.classList.toggle("is-active", isActive);
+    nav.setAttribute("aria-selected", isActive ? "true" : "false");
+    viewEl.classList.toggle("is-active", isActive);
+  });
+  if (view === "ticketLog") refreshTicketLog();
+  if (view === "studio") refreshStudioLog();
 }
 
 navNewTicket.addEventListener("click", () => setView("newTicket"));
 navTicketLog.addEventListener("click", () => setView("ticketLog"));
+navStudio.addEventListener("click", () => setView("studio"));
 
 /* -------------------------------- ticket log --------------------------------- */
 function createMultiSelectFilter({ wrap, btn, panel, options, allBtn, noneBtn }, values, allLabel, onChange) {
@@ -1131,7 +1143,220 @@ ticketLogBody.addEventListener("click", async (event) => {
   }
 });
 
-/* ---------------------------------- saving ----------------------------------- */
+/* ---------------------------------- studio ----------------------------------- */
+const studioClientNameInput = el("studioClientName");
+const studioGarmentDescriptionInput = el("studioGarmentDescription");
+const studioArrivalDateInput = el("studioArrivalDate");
+const studioSalespersonInput = el("studioSalesperson");
+const studioSaveBtn = el("studioSaveBtn");
+const studioSaveStatus = el("studioSaveStatus");
+
+const studioSearch = el("studioSearch");
+const studioClearFiltersBtn = el("studioClearFiltersBtn");
+const studioRefreshBtn = el("studioRefreshBtn");
+const studioLogStatus = el("studioLogStatus");
+const studioLogBody = el("studioLogBody");
+const studioStats = el("studioStats");
+
+const studioStatusFilterEls = {
+  wrap: el("studioStatusFilterWrap"), btn: el("studioStatusFilterBtn"), panel: el("studioStatusFilterPanel"),
+  options: el("studioStatusFilterOptions"), allBtn: el("studioStatusFilterAll"), noneBtn: el("studioStatusFilterNone"),
+};
+const studioSalespersonFilterEls = {
+  wrap: el("studioSalespersonFilterWrap"), btn: el("studioSalespersonFilterBtn"), panel: el("studioSalespersonFilterPanel"),
+  options: el("studioSalespersonFilterOptions"), allBtn: el("studioSalespersonFilterAll"), noneBtn: el("studioSalespersonFilterNone"),
+};
+
+let studioCache = [];
+const studioStatusFilter = createMultiSelectFilter(studioStatusFilterEls, STUDIO_STATUSES, "Status", () => renderStudioLog());
+const studioSalespersonFilter = createMultiSelectFilter(studioSalespersonFilterEls, SALESPEOPLE, "Salesperson", () => renderStudioLog());
+
+function clearStudioForm() {
+  studioClientNameInput.value = "";
+  studioGarmentDescriptionInput.value = "";
+  studioArrivalDateInput.value = "";
+  studioSalespersonInput.value = "";
+}
+
+studioSaveBtn.addEventListener("click", async () => {
+  const clientName = studioClientNameInput.value.trim();
+  const garmentDescription = studioGarmentDescriptionInput.value.trim();
+  if (!clientName || !garmentDescription) {
+    alert("Please fill in at least Client Name and Garment Description.");
+    return;
+  }
+
+  studioSaveBtn.disabled = true;
+  studioSaveStatus.textContent = "Saving…";
+  try {
+    const token = await auth.getValidToken();
+    const ledgerId = await getOrCreateLedger(token);
+    await getOrCreateStudioTab(token, ledgerId);
+    await appendStudioEntry(token, ledgerId, {
+      id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      createdAt: new Date().toLocaleString(),
+      clientName,
+      garmentDescription,
+      arrivalDate: studioArrivalDateInput.value ? new Date(`${studioArrivalDateInput.value}T00:00:00`).toLocaleDateString() : "",
+      salesperson: studioSalespersonInput.value,
+      status: STUDIO_STATUSES[0],
+    });
+    clearStudioForm();
+    studioSaveStatus.textContent = "Added to studio.";
+    refreshStudioLog();
+  } catch (err) {
+    studioSaveStatus.textContent = `Could not save: ${err.message}`;
+    alert(`Add to Studio failed: ${err.message}`);
+  } finally {
+    studioSaveBtn.disabled = false;
+  }
+});
+
+function renderStudioLog() {
+  const search = studioSearch.value.trim().toLowerCase();
+
+  const filtered = studioCache.filter((entry) => {
+    if (search && !entry.clientName.toLowerCase().includes(search)) return false;
+    if (!studioStatusFilter.matches(entry.status)) return false;
+    if (!studioSalespersonFilter.matches(entry.salesperson)) return false;
+    return true;
+  });
+
+  studioLogStatus.textContent =
+    filtered.length === studioCache.length
+      ? `${studioCache.length} item${studioCache.length === 1 ? "" : "s"} in studio.`
+      : `Showing ${filtered.length} item${filtered.length === 1 ? "" : "s"} out of ${studioCache.length} logged.`;
+
+  if (!filtered.length) {
+    studioLogBody.innerHTML = `<tr><td colspan="7" class="log-status">No studio items match yet.</td></tr>`;
+    return;
+  }
+
+  studioLogBody.innerHTML = filtered
+    .slice()
+    .reverse()
+    .map((entry) => {
+      const statusOptions = STUDIO_STATUSES.map((status) => `<option value="${status}" ${status === entry.status ? "selected" : ""}>${status}</option>`).join("");
+      const convertedNote = entry.convertedAt ? `<span class="converted-note">Converted ${escapeHtml(entry.convertedAt)}</span>` : "";
+      return `
+        <tr data-row="${entry.rowNumber}">
+          <td data-label="Client"><span class="cell-value">${escapeHtml(entry.clientName)}</span></td>
+          <td data-label="Garment"><span class="cell-value">${escapeHtml(entry.garmentDescription)}</span></td>
+          <td data-label="Arrival Date"><span class="cell-value">${escapeHtml(entry.arrivalDate || "—")}</span></td>
+          <td data-label="Salesperson"><span class="cell-value">${escapeHtml(entry.salesperson || "—")}</span></td>
+          <td data-label="Status"><span class="cell-value"><select class="status-select studio-status-select" data-row="${entry.rowNumber}" data-status="${escapeHtml(entry.status)}">${statusOptions}</select></span></td>
+          <td data-label="Status Date" class="status-date-cell"><span class="cell-value">${escapeHtml(entry.statusDate || "—")}</span></td>
+          <td data-label="Actions">
+            <span class="cell-value ticket-actions">
+              <button type="button" class="icon-btn convert-btn" data-row="${entry.rowNumber}" title="Convert to Alteration Ticket" aria-label="Convert to Alteration Ticket" ${entry.convertedAt ? "disabled" : ""}>${ICONS.convert}</button>
+              <button type="button" class="icon-btn icon-btn-danger studio-delete-btn" data-row="${entry.rowNumber}" title="Delete" aria-label="Delete">${ICONS.delete}</button>
+              ${convertedNote}
+            </span>
+          </td>
+        </tr>`;
+    })
+    .join("");
+}
+
+async function refreshStudioLog() {
+  if (!auth.hasValidSession()) {
+    studioLogStatus.textContent = "Sign in to load the studio log.";
+    return;
+  }
+  studioLogStatus.textContent = "Loading…";
+  try {
+    const token = await auth.getValidToken();
+    const ledgerId = await getOrCreateLedger(token);
+    await getOrCreateStudioTab(token, ledgerId);
+    studioCache = await listStudioEntries(token, ledgerId);
+    const inStudioCount = studioCache.filter((e) => e.status !== "Complete").length;
+    studioStats.innerHTML = `<strong>${studioCache.length}</strong> total · <span class="stat-amber">${inStudioCount} active</span>`;
+    renderStudioLog();
+  } catch (err) {
+    studioLogStatus.textContent = `Could not load studio log: ${err.message}`;
+  }
+}
+
+studioRefreshBtn.addEventListener("click", refreshStudioLog);
+studioSearch.addEventListener("input", renderStudioLog);
+studioClearFiltersBtn.addEventListener("click", () => {
+  studioSearch.value = "";
+  studioStatusFilter.reset();
+  studioSalespersonFilter.reset();
+  renderStudioLog();
+});
+
+studioLogBody.addEventListener("change", async (event) => {
+  const select = event.target.closest(".studio-status-select");
+  if (!select) return;
+  const rowNumber = Number(select.dataset.row);
+  const entry = studioCache.find((item) => item.rowNumber === rowNumber);
+  if (!entry) return;
+  const previousStatus = entry.status;
+  entry.status = select.value;
+  select.dataset.status = select.value;
+  try {
+    const token = await auth.getValidToken();
+    const ledgerId = await getOrCreateLedger(token);
+    const now = await updateStudioStatus(token, ledgerId, rowNumber, select.value);
+    entry.statusDate = now;
+    const dateCell = select.closest("tr")?.querySelector(".status-date-cell .cell-value");
+    if (dateCell) dateCell.textContent = now;
+  } catch (err) {
+    entry.status = previousStatus;
+    select.value = previousStatus;
+    select.dataset.status = previousStatus;
+    studioLogStatus.textContent = `Could not update status: ${err.message}`;
+  }
+});
+
+studioLogBody.addEventListener("click", async (event) => {
+  const convertBtn = event.target.closest(".convert-btn");
+  if (convertBtn) {
+    const rowNumber = Number(convertBtn.dataset.row);
+    const entry = studioCache.find((item) => item.rowNumber === rowNumber);
+    if (!entry) return;
+
+    clearAllFields();
+    customerNameInput.value = entry.clientName;
+    if (entry.salesperson) salespersonInput.value = entry.salesperson;
+    renderOutput();
+    saveToStorage();
+    setView("newTicket");
+    saveStatus.textContent = `Started from studio item for ${entry.clientName}. Fill in Tailor, Due Date, and garments to save.`;
+
+    convertBtn.disabled = true;
+    try {
+      const token = await auth.getValidToken();
+      const ledgerId = await getOrCreateLedger(token);
+      await markStudioConverted(token, ledgerId, rowNumber);
+    } catch (err) {
+      studioLogStatus.textContent = `Ticket started, but couldn't mark the studio item converted: ${err.message}`;
+    }
+    return;
+  }
+
+  const deleteBtn = event.target.closest(".studio-delete-btn");
+  if (deleteBtn) {
+    const rowNumber = Number(deleteBtn.dataset.row);
+    const entry = studioCache.find((item) => item.rowNumber === rowNumber);
+    if (!entry) return;
+    const confirmed = window.confirm(`Remove ${entry.clientName || "this item"} from the studio log? This can't be undone.`);
+    if (!confirmed) return;
+
+    deleteBtn.disabled = true;
+    try {
+      const token = await auth.getValidToken();
+      const ledgerId = await getOrCreateLedger(token);
+      await deleteStudioEntry(token, ledgerId, rowNumber);
+      studioLogStatus.textContent = `Removed ${entry.clientName || "item"} from the studio log.`;
+      await refreshStudioLog();
+    } catch (err) {
+      deleteBtn.disabled = false;
+      studioLogStatus.textContent = `Could not delete: ${err.message}`;
+    }
+  }
+});
 driveSaveBtn.addEventListener("click", async () => {
   try {
     const missing = validateBeforePrint();

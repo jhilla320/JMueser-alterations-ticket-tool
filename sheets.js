@@ -209,17 +209,146 @@ export async function updateTicketNotes(token, ledgerId, rowNumber, notes) {
   });
 }
 
-async function getSheetGid(token, ledgerId) {
+async function getSheetGid(token, ledgerId, tabName = SHEET_TAB) {
   const data = await sheetsApi(token, `${ledgerId}?fields=sheets.properties`);
-  const sheet = data.sheets?.find((s) => s.properties.title === SHEET_TAB);
-  return sheet?.properties.sheetId ?? 0;
+  const sheet = data.sheets?.find((s) => s.properties.title === tabName);
+  return sheet?.properties.sheetId ?? null;
 }
 
 // rowNumber is the 1-indexed sheet row (matches listTickets' rowNumber).
 // Deleting shifts every later row up by one, so callers should refresh
 // their ticket list afterward rather than reusing cached row numbers.
 export async function deleteTicketRow(token, ledgerId, rowNumber) {
-  const sheetId = await getSheetGid(token, ledgerId);
+  const sheetId = await getSheetGid(token, ledgerId, SHEET_TAB);
+  if (sheetId === null) throw new Error("Could not find the Tickets sheet tab");
+  await sheetsApi(token, `${ledgerId}:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({
+      requests: [
+        {
+          deleteDimension: {
+            range: { sheetId, dimension: "ROWS", startIndex: rowNumber - 1, endIndex: rowNumber },
+          },
+        },
+      ],
+    }),
+  });
+}
+
+/* ---------------------------------- studio -----------------------------------
+   Garments that arrived for a client fitting but aren't (yet) an alteration
+   ticket. Lives in its own tab of the same spreadsheet — deliberately not
+   mixed into the Tickets tab, since the fields and lifecycle don't overlap
+   (no tailor, no measurements, no saved document).
+--------------------------------------------------------------------------- */
+const STUDIO_SHEET_TAB = "Studio";
+const STUDIO_HEADERS = [
+  "Studio ID",
+  "Created At",
+  "Client Name",
+  "Garment Description",
+  "Arrival Date",
+  "Salesperson",
+  "Status",
+  "Status Date",
+  "Converted At",
+];
+
+async function ensureStudioTab(token, ledgerId) {
+  const existingGid = await getSheetGid(token, ledgerId, STUDIO_SHEET_TAB);
+  if (existingGid !== null) return;
+
+  await sheetsApi(token, `${ledgerId}:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({ requests: [{ addSheet: { properties: { title: STUDIO_SHEET_TAB } } }] }),
+  });
+
+  await sheetsApi(token, `${ledgerId}/values/${encodeURIComponent(`${STUDIO_SHEET_TAB}!A1`)}?valueInputOption=RAW`, {
+    method: "PUT",
+    body: JSON.stringify({ values: [STUDIO_HEADERS] }),
+  });
+}
+
+export async function getOrCreateStudioTab(token, ledgerId) {
+  await ensureStudioTab(token, ledgerId);
+  return ledgerId; // same spreadsheet — this just guarantees the tab exists
+}
+
+export async function appendStudioEntry(token, ledgerId, entry) {
+  const row = [
+    entry.id,
+    entry.createdAt,
+    entry.clientName,
+    entry.garmentDescription,
+    entry.arrivalDate,
+    entry.salesperson,
+    entry.status,
+    entry.createdAt,
+    "",
+  ];
+  await sheetsApi(
+    token,
+    `${ledgerId}/values/${encodeURIComponent(`${STUDIO_SHEET_TAB}!A:I`)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+    { method: "POST", body: JSON.stringify({ values: [row] }) },
+  );
+}
+
+export async function listStudioEntries(token, ledgerId) {
+  const data = await sheetsApi(token, `${ledgerId}/values/${encodeURIComponent(`${STUDIO_SHEET_TAB}!A2:I`)}`);
+  const rows = data.values || [];
+  return rows
+    .map((row, index) => ({
+      rowNumber: index + 2,
+      id: row[0] || "",
+      createdAt: row[1] || "",
+      clientName: row[2] || "",
+      garmentDescription: row[3] || "",
+      arrivalDate: row[4] || "",
+      salesperson: row[5] || "",
+      status: row[6] || "In Studio",
+      statusDate: row[7] || row[1] || "",
+      convertedAt: row[8] || "",
+    }))
+    .filter((entry) => entry.id);
+}
+
+export async function updateStudioStatus(token, ledgerId, rowNumber, status) {
+  const now = new Date().toLocaleString();
+  await sheetsApi(token, `${ledgerId}/values:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({
+      valueInputOption: "RAW",
+      data: [
+        { range: `${STUDIO_SHEET_TAB}!G${rowNumber}`, values: [[status]] },
+        { range: `${STUDIO_SHEET_TAB}!H${rowNumber}`, values: [[now]] },
+      ],
+    }),
+  });
+  return now;
+}
+
+// Marks a studio entry as converted (once its garment has become an actual
+// alteration ticket) and advances it to Complete, since its job in the
+// studio log is done — tracking continues on the ticket from here.
+export async function markStudioConverted(token, ledgerId, rowNumber) {
+  const now = new Date().toLocaleString();
+  await sheetsApi(token, `${ledgerId}/values:batchUpdate`, {
+    method: "POST",
+    body: JSON.stringify({
+      valueInputOption: "RAW",
+      data: [
+        { range: `${STUDIO_SHEET_TAB}!G${rowNumber}`, values: [["Complete"]] },
+        { range: `${STUDIO_SHEET_TAB}!H${rowNumber}`, values: [[now]] },
+        { range: `${STUDIO_SHEET_TAB}!I${rowNumber}`, values: [[now]] },
+      ],
+    }),
+  });
+  return now;
+}
+
+export async function deleteStudioEntry(token, ledgerId, rowNumber) {
+  const sheetId = await getSheetGid(token, ledgerId, STUDIO_SHEET_TAB);
+  if (sheetId === null) throw new Error("Could not find the Studio sheet tab");
   await sheetsApi(token, `${ledgerId}:batchUpdate`, {
     method: "POST",
     body: JSON.stringify({

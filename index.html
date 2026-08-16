@@ -35,6 +35,7 @@
       <nav class="view-tabs" role="tablist" aria-label="Section">
         <button id="nav-newTicket" class="view-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="view-newTicket">Create Ticket</button>
         <button id="nav-ticketLog" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="view-ticketLog">Ticket Log</button>
+        <button id="nav-studio" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="view-studio">Studio</button>
       </nav>
 
       <!-- ================= NEW TICKET VIEW ================= -->
@@ -187,6 +188,106 @@
                 </tr>
               </thead>
               <tbody id="ticketLogBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= STUDIO VIEW ================= -->
+      <section id="view-studio" class="view">
+        <section class="panel" style="margin-bottom: 1.1rem;">
+          <h3 style="margin: 0.1rem 0 0.9rem; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem;">Add to Studio</h3>
+          <div class="field-grid">
+            <div>
+              <label for="studioClientName">Client Name</label>
+              <input id="studioClientName" type="text" placeholder="Client name" />
+            </div>
+            <div>
+              <label for="studioGarmentDescription">Garment Description</label>
+              <input id="studioGarmentDescription" type="text" placeholder="e.g. Navy suit, shipped from mill" />
+            </div>
+            <div>
+              <label for="studioArrivalDate">Arrival Date</label>
+              <input id="studioArrivalDate" type="date" />
+            </div>
+            <div>
+              <label for="studioSalesperson">Salesperson</label>
+              <select id="studioSalesperson">
+                <option value="" selected>Select</option>
+                <option value="Bodhi">Bodhi</option>
+                <option value="Chase">Chase</option>
+                <option value="Chris">Chris</option>
+                <option value="Christian">Christian</option>
+                <option value="Colin">Colin</option>
+                <option value="Edris">Edris</option>
+                <option value="Frank">Frank</option>
+                <option value="Jake">Jake</option>
+                <option value="Jeff">Jeff</option>
+                <option value="Jonas">Jonas</option>
+                <option value="Mattia">Mattia</option>
+                <option value="Nor">Nor</option>
+                <option value="Ryder">Ryder</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <div class="actions-top-row">
+              <button id="studioSaveBtn" class="btn-primary" type="button">✂ Add to Studio</button>
+            </div>
+            <span id="studioSaveStatus" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="log-header">
+            <h3 style="margin:0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem;">Studio Log</h3>
+            <p id="studioStats" class="log-stats">Sign in to see counts.</p>
+          </div>
+          <div class="log-toolbar">
+            <input id="studioSearch" class="log-search" type="search" placeholder="Search by client name…" autocomplete="off" />
+
+            <div class="filter-multiselect" id="studioStatusFilterWrap">
+              <button type="button" id="studioStatusFilterBtn" class="filter-multiselect-btn">Status</button>
+              <div id="studioStatusFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="studioStatusFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="studioStatusFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="studioStatusFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <div class="filter-multiselect" id="studioSalespersonFilterWrap">
+              <button type="button" id="studioSalespersonFilterBtn" class="filter-multiselect-btn">Salesperson</button>
+              <div id="studioSalespersonFilterPanel" class="filter-multiselect-panel" hidden>
+                <div class="filter-multiselect-actions">
+                  <button type="button" id="studioSalespersonFilterAll" class="filter-multiselect-link">All</button>
+                  <button type="button" id="studioSalespersonFilterNone" class="filter-multiselect-link">None</button>
+                </div>
+                <div id="studioSalespersonFilterOptions" class="filter-multiselect-options"></div>
+              </div>
+            </div>
+
+            <button id="studioClearFiltersBtn" class="btn-ghost" type="button">Clear Filters</button>
+            <button id="studioRefreshBtn" class="btn-ghost" type="button">Refresh</button>
+          </div>
+
+          <p id="studioLogStatus" class="log-status" aria-live="polite">Sign in to load the studio log.</p>
+
+          <div class="log-table-wrap">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Garment</th>
+                  <th>Arrival Date</th>
+                  <th>Salesperson</th>
+                  <th>Status</th>
+                  <th>Status Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studioLogBody"></tbody>
             </table>
           </div>
         </section>
