@@ -903,6 +903,12 @@ function summarizeGarments(formState) {
   return parts.length ? parts.join(", ") : "—";
 }
 
+function updateTicketLogStats() {
+  const openCount = ticketCache.filter((t) => t.status === "Open" || t.status === "In Progress").length;
+  const rushCount = ticketCache.filter((t) => t.rush && t.status !== "Completed").length;
+  logStats.innerHTML = `<strong>${ticketCache.length}</strong> tickets · <span class="stat-amber">${openCount} open</span> · <span class="stat-red">${rushCount} rush</span>`;
+}
+
 function renderTicketLog() {
   const search = ticketSearch.value.trim().toLowerCase();
   const rushOnly = ticketRushFilter.checked;
@@ -967,9 +973,7 @@ async function refreshTicketLog() {
     const token = await auth.getValidToken();
     const ledgerId = await getOrCreateLedger(token);
     ticketCache = await listTickets(token, ledgerId);
-    const openCount = ticketCache.filter((t) => t.status === "Open" || t.status === "In Progress").length;
-    const rushCount = ticketCache.filter((t) => t.rush && t.status !== "Completed").length;
-    logStats.innerHTML = `<strong>${ticketCache.length}</strong> tickets · <span class="stat-amber">${openCount} open</span> · <span class="stat-red">${rushCount} rush</span>`;
+    updateTicketLogStats();
 
     // Row numbers shift when any row is deleted — keep an in-progress edit
     // pointed at the right row (or drop out of edit mode if it's gone).
@@ -1017,8 +1021,8 @@ ticketLogBody.addEventListener("change", async (event) => {
     const ledgerId = await getOrCreateLedger(token);
     const now = await updateTicketStatus(token, ledgerId, rowNumber, select.value);
     ticket.statusDate = now;
-    const dateCell = select.closest("tr")?.querySelector(".status-date-cell .cell-value");
-    if (dateCell) dateCell.textContent = now;
+    updateTicketLogStats();
+    renderTicketLog(); // reapply active filters — e.g. drop out of view if now Completed and hidden
     ticketLogStatus.textContent = `Updated ${ticket.customerName} to ${select.value}.`;
   } catch (err) {
     ticket.status = previousStatus;
