@@ -29,7 +29,9 @@ let dueDateHiddenInput = null;
 let dueDateDisplayInput = null;
 
 const garmentItemsEl = el("garmentItemsList");
-const addGarmentBtn = el("addGarmentBtn");
+const addJacketBtn = el("addJacketBtn");
+const addTrouserBtn = el("addTrouserBtn");
+const addShirtBtn = el("addShirtBtn");
 
 const printArea = el("printArea");
 const saveStatus = el("saveStatus");
@@ -305,7 +307,10 @@ const SIZE_DESCRIPTION_PLACEHOLDERS = {
   shirt: "e.g. 15 Blue Oxford",
 };
 
-function renderGarmentPicker(item) {
+function renderGarmentPicker(item, locked) {
+  if (locked) {
+    return `<div class="garment-picker garment-picker-locked" role="group" aria-label="Garment type"><span class="garment-picker-label">${GARMENT_TYPE_LABELS[item.garmentType] || "Garment"}</span></div>`;
+  }
   return `<div class="garment-picker" role="group" aria-label="Garment type">${Object.entries(GARMENT_TYPE_LABELS)
     .map(
       ([value, label]) =>
@@ -347,7 +352,7 @@ function renderGarmentItems() {
       return `
         <section class="repeat-item" data-uid="${item._uid}">
           <div class="repeat-item-header">
-            ${renderGarmentPicker(item)}
+            ${renderGarmentPicker(item, canCollapse)}
             <div class="repeat-item-header-actions">
               ${canCollapse ? `<button type="button" class="link-action-btn" data-action="toggle-collapse" data-uid="${item._uid}">Collapse</button>` : ""}
               ${canRemove ? `<button type="button" class="remove-item-btn" data-action="remove" data-uid="${item._uid}">Remove</button>` : ""}
@@ -1470,11 +1475,21 @@ driveSaveBtn.addEventListener("click", async () => {
 clearBtn.addEventListener("click", clearAllFields);
 
 /* ---------------------------------- wiring ----------------------------------- */
-addGarmentBtn.addEventListener("click", () => {
-  garmentItems.push(createEmptyItem("jacket"));
+function addGarmentItem(garmentType) {
+  const item = createEmptyItem(garmentType);
+  garmentItems.push(item);
   renderGarmentItems();
   onInputChange();
-});
+  const firstField = document.getElementById(`sizeDescription-${item._uid}`);
+  if (firstField) {
+    firstField.scrollIntoView({ behavior: "smooth", block: "center" });
+    firstField.focus();
+  }
+}
+
+addJacketBtn.addEventListener("click", () => addGarmentItem("jacket"));
+addTrouserBtn.addEventListener("click", () => addGarmentItem("trouser"));
+addShirtBtn.addEventListener("click", () => addGarmentItem("shirt"));
 
 garmentItemsEl.addEventListener("input", handleDynamicInput);
 garmentItemsEl.addEventListener("change", handleDynamicInput);
