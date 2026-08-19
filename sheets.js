@@ -73,9 +73,28 @@ async function createLedgerFile(token) {
   const sheetId = created.spreadsheetId;
 
   // Move it from My Drive root into the shop's shared folder.
-  await driveApi(token, `files/${sheetId}?addParents=${DRIVE_FOLDER_ID}&supportsAllDrives=true&fields=id,parents`, {
-    method: "PATCH",
-  });
+  try {
+    await driveApi(token, `files/${sheetId}?addParents=${DRIVE_FOLDER_ID}&supportsAllDrives=true&fields=id,parents`, {
+      method: "PATCH",
+    });
+  } catch (err) {
+    // Don't leave an orphaned spreadsheet sitting in this account's personal
+    // Drive if we can't actually put it where it belongs — clean it up and
+    // surface a clear, actionable reason instead of Google's raw 404 text.
+    try {
+      await driveApi(token, `files/${sheetId}?supportsAllDrives=true`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trashed: true }),
+      });
+    } catch {
+      // If cleanup itself fails, the original error below is still the
+      // important one to surface — don't let this mask it.
+    }
+    throw new Error(
+      "Your Google account doesn't seem to have access to the shop's shared Drive folder. Ask whoever manages Drive sharing to add you to that folder (not just an individual file), then sign out and back in.",
+    );
+  }
 
   await sheetsApi(token, `${sheetId}/values/${encodeURIComponent(`${SHEET_TAB}!A1`)}?valueInputOption=RAW`, {
     method: "PUT",
